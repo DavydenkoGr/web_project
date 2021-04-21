@@ -19,13 +19,41 @@
                 <p>
                     <a class="btn btn-light" href="/register_student">Зарегистрироваться ученику</a>
                     <a class="btn btn-light" href="/register_teacher">Зарегистрироваться учителю</a>
-                    <a class="btn btn-success" href="/login">Войти</a>
+                    <a class="btn btn-secondary sign_in" href="/login">Войти</a>
                 </p>
             {% endif %}
         </div>
     </nav>
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color:#D1B280">
+      <div class="container-fluid">
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link active" href="#">Обьявления</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Отчеты</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Дневник</a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Другое
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item" href="#">Action</a></li>
+                <li><a class="dropdown-item" href="#">Another action</a></li>
+                <li><a class="dropdown-item" href="#">Something else here</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
     <main role="main" class="container">
         {% block content %}{% endblock %}
     </main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
 </body>
 </html>

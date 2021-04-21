@@ -22,7 +22,6 @@ type_of_user = None
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
-    print(1)
     if type_of_user == 'teacher':
         return db_sess.query(Teacher).get(user_id)
     elif type_of_user == 'student':
@@ -126,7 +125,6 @@ def login():
         teacher = db_sess.query(Teacher).filter(Teacher.email == form.email.data).first()
         if teacher and teacher.check_password(form.password.data):
             type_of_user = 'teacher'
-            print(1)
             login_user(teacher, remember=form.remember_me.data)
             return redirect("/")
         # Если учитель не найден, пройдемся по ученикам

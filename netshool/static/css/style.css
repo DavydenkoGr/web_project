@@ -1,3 +1,9 @@
 nav {
 background-color: #2F3131;
 }
+
+.sign_in{
+background-color: #D1B280;
+border: 2px solid #D1B280;
+color: black;
+}
