@@ -4,6 +4,16 @@ from .db_session import SqlAlchemyBase
 from sqlalchemy_serializer import SerializerMixin
 
 
+association_table2 = sqlalchemy.Table(
+    'class_to_subject',
+    SqlAlchemyBase.metadata,
+    sqlalchemy.Column('school_class', sqlalchemy.Integer,
+                      sqlalchemy.ForeignKey('school_classes.id')),
+    sqlalchemy.Column('subject', sqlalchemy.Integer,
+                      sqlalchemy.ForeignKey('subjects.id'))
+)
+
+
 class Subject(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'subjects'
 

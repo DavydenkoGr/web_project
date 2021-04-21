@@ -22,11 +22,15 @@ class RegisterStudentForm(FlaskForm):
 
 
 class RegisterTeacherForm(FlaskForm):
+    s = ('Математика', 'Физика', 'Химия', 'Информатика', 'Русский язык', 'Английский язык',
+         'История', 'Обществознание', 'Биология', 'География', 'Литература',
+         'Физкультура', 'ОБЖ', 'Технология', 'ИЗО', 'Музыка', 'Окружающий мир')
     email = EmailField('Почта', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
     password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
     surname = StringField('Фамилия', validators=[DataRequired()])
     name = StringField('Имя', validators=[DataRequired()])
+    subject = SelectField('Предмет', validators=[DataRequired()], choices=s)
     classes = MultiCheckboxField('Классы', validators=[DataRequired()],
                                  choices=[(str(i + 1) + j, str(i + 1) + j)
                                           for i in range(11) for j in ['А', 'Б', 'В', 'Г']])

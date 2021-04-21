@@ -4,7 +4,7 @@ from .db_session import SqlAlchemyBase
 from sqlalchemy_serializer import SerializerMixin
 
 
-association_table = sqlalchemy.Table(
+association_table1 = sqlalchemy.Table(
     'teacher_to_class',
     SqlAlchemyBase.metadata,
     sqlalchemy.Column('teacher', sqlalchemy.Integer,
@@ -22,3 +22,6 @@ class SchoolClass(SqlAlchemyBase, SerializerMixin):
     letter = sqlalchemy.Column(sqlalchemy.CHAR, nullable=False)
 
     students = orm.relation("Student", back_populates='school_class')
+    subjects = orm.relation("Subject",
+                            secondary="class_to_subject",
+                            backref="school_classes")

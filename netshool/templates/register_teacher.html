@@ -49,6 +49,15 @@
             </p>
         {% endfor %}
     </p>
+    <p>
+        {{ form.subject.label }}<br>
+        {{ form.subject(class="form-control") }}<br>
+        {% for error in form.subject.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
     {% for class in form.classes %}
         <div class="form-check">
             {{ class(class="form-check-input") }}
