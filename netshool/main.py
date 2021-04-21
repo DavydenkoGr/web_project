@@ -1,10 +1,11 @@
-from flask import Flask, render_template, redirect, request, abort, make_response, jsonify, url_for
 from data import db_session
 from data.marks import Marks
 from data.school_classes import SchoolClass
 from data.students import Student
 from data.subjects import Subject
 from data.teachers import Teacher
+from forms.registration import RegisterStudentForm, RegisterTeacherForm, LoginForm
+from flask import Flask, render_template, redirect, request, abort, make_response, jsonify, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import abort, Api
 
