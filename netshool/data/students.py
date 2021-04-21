@@ -14,6 +14,7 @@ class Student(SqlAlchemyBase, UserMixin, SerializerMixin):
     surname = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     email = sqlalchemy.Column(sqlalchemy.String,
                               index=True, unique=True, nullable=False)
+    school_class_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("school_classes.id"))
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=False)
 
     school_class = orm.relation("SchoolClass")
