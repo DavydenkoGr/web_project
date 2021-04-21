@@ -28,6 +28,28 @@ def index():
     return render_template("base.html", title='Электронный дневник')
 
 
+@app.route('/register_student', methods=['GET', 'POST'])
+def register_student():
+    form = RegisterStudentForm()
+    if form.validate_on_submit():
+        return redirect('/login')
+    return render_template('register_student.html', title='Регистрация ученика', form=form)
+
+
+@app.route('/register_teacher', methods=['GET', 'POST'])
+def register_teacher():
+    form = RegisterTeacherForm()
+    if form.validate_on_submit():
+        return redirect('/login')
+    return render_template('register_teacher.html', title='Регистрация учителя', form=form)
+
+
+@app.route("/login")
+def login():
+    form = LoginForm()
+    return render_template('login.html',title= 'Вход', form=form)
+
+
 def main():
     db_session.global_init("db/netschool.db")
     app.run()
