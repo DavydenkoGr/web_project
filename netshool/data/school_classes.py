@@ -21,4 +21,4 @@ class SchoolClass(SqlAlchemyBase, SerializerMixin):
     number = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     letter = sqlalchemy.Column(sqlalchemy.CHAR, nullable=False)
 
-    students = orm.relation("Students", back_populates='school_class')
+    students = orm.relation("Student", back_populates='school_class')

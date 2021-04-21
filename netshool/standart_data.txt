@@ -1,0 +1,9 @@
+db_sess = db_session.create_session()
+for i in range(11):
+    for j in ['А', 'Б', 'В', 'Г']:
+        school_class = SchoolClass(
+            number=i + 1,
+            letter=j
+        )
+        db_sess.add(school_class)
+db_sess.commit()

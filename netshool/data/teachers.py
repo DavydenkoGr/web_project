@@ -19,7 +19,7 @@ class Teacher(SqlAlchemyBase, UserMixin, SerializerMixin):
 
     subject = orm.relation("Subject")
     school_classes = orm.relation("SchoolClass",
-                                  secondary="association",
+                                  secondary="teacher_to_class",
                                   backref="teachers")
 
     def set_password(self, password):

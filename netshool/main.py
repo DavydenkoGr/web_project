@@ -32,6 +32,28 @@ def index():
 def register_student():
     form = RegisterStudentForm()
     if form.validate_on_submit():
+        if form.password.data != form.password_again.data:
+            return render_template('register_student.html', title='Регистрация ученика',
+                                   form=form,
+                                   message="Пароли не совпадают")
+        db_sess = db_session.create_session()
+        if db_sess.query(Student).filter(Student.email == form.email.data).first() or\
+                db_sess.query(Teacher).filter(Teacher.email == form.email.data).first():
+            return render_template('register_student.html', title='Регистрация ученика',
+                                   form=form,
+                                   message="Данная почта уже зарегистрирована в системе")
+        school_class = db_sess.query(SchoolClass).filter(SchoolClass.number == form.class_number,
+                                                         SchoolClass.letter == form.class_letter
+                                                         ).first()
+        student = Student(
+            surname=form.surname.data,
+            name=form.name.data,
+            email=form.email.data,
+            school_class_id=school_class.id
+        )
+        student.set_password(form.password.data)
+        db_sess.add(student)
+        db_sess.commit()
         return redirect('/login')
     return render_template('register_student.html', title='Регистрация ученика', form=form)
 
