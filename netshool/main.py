@@ -17,13 +17,20 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
+@login_manager.user_loader
+def load_user(user_id):
+    db_sess = db_session.create_session()
+    return db_sess.query(Student).get(user_id)
+
+
 @app.route("/")
 def index():
-    return 'Тестовая страница'
+    return render_template("base.html", title='Электронный дневник')
 
 
 def main():
     db_session.global_init("db/netschool.db")
+    app.run()
 
 
 if __name__ == '__main__':
