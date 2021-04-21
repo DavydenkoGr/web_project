@@ -15,12 +15,25 @@ api = Api(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
+# Переменная, отвечающая за тип пользователя
+type_of_user = None
 
 
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
-    return db_sess.query(Student).get(user_id)
+    print(1)
+    if type_of_user == 'teacher':
+        return db_sess.query(Teacher).get(user_id)
+    elif type_of_user == 'student':
+        return db_sess.query(Student).get(user_id)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect("/")
 
 
 @app.route("/")
@@ -103,19 +116,23 @@ def register_teacher():
     return render_template('register_teacher.html', title='Регистрация учителя', form=form)
 
 
-@app.route("/login")
+@app.route("/login", methods=['GET', 'POST'])
 def login():
+    global type_of_user
     form = LoginForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         # Сначала пройдемся по учителям
         teacher = db_sess.query(Teacher).filter(Teacher.email == form.email.data).first()
         if teacher and teacher.check_password(form.password.data):
+            type_of_user = 'teacher'
+            print(1)
             login_user(teacher, remember=form.remember_me.data)
             return redirect("/")
         # Если учитель не найден, пройдемся по ученикам
         student = db_sess.query(Student).filter(Student.email == form.email.data).first()
         if student and student.check_password(form.password.data):
+            type_of_user = 'student'
             login_user(student, remember=form.remember_me.data)
             return redirect("/")
         return render_template('login.html',
