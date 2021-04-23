@@ -1,62 +1,99 @@
-import flask
-from flask import jsonify, request
-
-from . import db_session
-from .jobs import Jobs
-
-blueprint = flask.Blueprint(
-    'jobs_api',
-    __name__,
-    template_folder='templates'
-)
-
-
-@blueprint.route('/api/jobs')
-def get_jobs():
-    db_sess = db_session.create_session()
-    jobs = db_sess.query(Jobs).all()
-    return jsonify(
-        {
-            'jobs':
-                [item.to_dict(only=('id', 'team_leader', 'job', 'work_size', 'collaborators',
-                                    'start_date', 'end_date', 'is_finished',
-                                    'user.name'))
-                 for item in jobs]
-        }
-    )
-
-
-@blueprint.route('/api/jobs/<int:job_id>', methods=['GET'])
-def get_one_job(job_id):
-    db_sess = db_session.create_session()
-    job = db_sess.query(Jobs).get(job_id)
-    if not job:
-        return jsonify({'error': 'Not found'})
-    return jsonify(
-        {
-            'job': job.to_dict(only=('id', 'team_leader', 'job', 'work_size', 'collaborators',
-                                     'start_date', 'end_date', 'is_finished',
-                                     'user.name'))
-        }
-    )
-
-
-@blueprint.route('/api/jobs', methods=['POST'])
-def create_job():
-    if not request.json:
-        return jsonify({'error': 'Empty request'})
-    elif not all(key in request.json for key in
-                 ['id', 'team_leader', 'job', 'work_size', 'collaborators', 'is_finished']):
-        return jsonify({'error': 'Bad request'})
-    db_sess = db_session.create_session()
-    job = Jobs(
-        id=request.json['id'],
-        team_leader=request.json['team_leader'],
-        job=request.json['job'],
-        work_size=request.json['work_size'],
-        collaborators=request.json['collaborators'],
-        is_finished=request.json['is_finished']
-    )
-    db_sess.add(job)
-    db_sess.commit()
-    return jsonify({'success': 'OK'})
+@app.route('/register_teacher', methods=['GET', 'POST'])
+def register_teacher():
+    form = RegisterTeacherForm()
+    if form.validate_on_submit():
+        if form.password.data != form.password_again.data:
+            return render_template('register_teacher.html', title='Регистрация учителя',
+                                   form=form,
+                                   message="Пароли не совпадают")
+        db_sess = db_session.create_session()
+        if db_sess.query(Student).filter(Student.email == form.email.data).first() or \
+                db_sess.query(Teacher).filter(Teacher.email == form.email.data).first():
+            return render_template('register_teacher.html', title='Регистрация учителя',
+                                   form=form,
+                                   message="Данная почта уже зарегистрирована в системе")
+        subject = db_sess.query(Subject).filter(Subject.name == form.subject.data
+                                                ).first()
+        # В зависимости от цифры у некоторых классов присутсвуют одни уроки и отсутствуют другие.
+        # Проверяем есть ли у данноко класса данный урок.
+        # Заодно проверяем, нет ли уже у какого-то из выбранных классов учителя по заданному предмету.
+        for number_letter in form.classes.data:
+            letter = number_letter[-1]
+            number = int(number_letter[:-1])
+            school_class = db_sess.query(SchoolClass).filter(SchoolClass.letter == letter,
+                                                             SchoolClass.number == number).first()
+            if subject not in school_class.subjects:
+                return render_template('register_teacher.html', title='Регистрация учителя',
+                                       form=form,
+                                       message=f'У {number} класса отсутствует предмет'
+                                               f' {form.subject.data}')
+            for teacher in db_sess.query(Teacher).all():
+                if school_class in teacher.school_classes and teacher.subject_id == subject.id:
+                    return render_template('register_teacher.html', title='Регистрация учителя',
+                                           form=form,
+                                           message=f'У {number}{letter} класса уже есть учитель'
+                                                   f' по предмету {subject.name}')
+        teacher = Teacher(
+            surname=form.surname.data,
+            name=form.name.data,
+            email=form.email.data,
+            subject_id=subject.id
+        )
+        teacher.set_password(form.password.data)
+        # Очень страшная проверка пересечения уроков в расписании
+        # Делим выбранные классы на 2 смены и попарно сравниваем каждый урок каждого дня,
+        # чтоб не получилось ситуаций, в которых учитель ведет уроки у 2 классов одновременно
+        list_of_tables1 = list()
+        names1 = list()
+        list_of_tables2 = list()
+        names2 = list()
+        for number_letter in form.classes.data:
+            letter = number_letter[-1]
+            number = int(number_letter[:-1])
+            if number % 2 == 1:
+                list_of_tables1.append(get_class_schedule(number, letter))
+                names1.append(f"{number}{letter}")
+            else:
+                list_of_tables2.append(get_class_schedule(number, letter))
+                names2.append(f"{number}{letter}")
+        for i, first_table in enumerate(list_of_tables1):
+            for j, second_table in enumerate(list_of_tables1):
+                if i == j:
+                    continue
+                for day in range(min(len(first_table), len(second_table))):
+                    for lesson in range(min(len(first_table[day]), len(second_table[day]))):
+                        if first_table[day][lesson] == second_table[day][lesson] and\
+                                first_table[day][lesson] == subject.name:
+                            return render_template('register_teacher.html',
+                                                   title='Регистрация учителя',
+                                                   form=form,
+                                                   message=f'У классов {names1[i]} и {names1[j]}'
+                                                           f' совпадают расписания,'
+                                                           f' уберите один из классов или'
+                                                           f' измените расписание.')
+        for i, first_table in enumerate(list_of_tables2):
+            for j, second_table in enumerate(list_of_tables2):
+                if i == j:
+                    continue
+                for day in range(min(len(first_table), len(second_table))):
+                    for lesson in range(min(len(first_table[day]), len(second_table[day]))):
+                        if first_table[day][lesson] == second_table[day][lesson] and\
+                                first_table[day][lesson] == subject.name:
+                            return render_template('register_teacher.html',
+                                                   title='Регистрация учителя',
+                                                   form=form,
+                                                   message=f'У классов {names2[i]} и {names2[j]}'
+                                                           f' совпадают расписания,'
+                                                           f' уберите один из классов или'
+                                                           f' измените расписание.')
+        # Если все проверки пройдены, добавляем учителю каждый выбранный класс
+        db_sess.add(teacher)
+        for number_letter in form.classes.data:
+            letter = number_letter[-1]
+            number = int(number_letter[:-1])
+            school_class = db_sess.query(SchoolClass).filter(SchoolClass.letter == letter,
+                                                             SchoolClass.number == number).first()
+            teacher.school_classes.append(school_class)
+        db_sess.commit()
+        return redirect('/login')
+    return render_template('register_teacher.html', title='Регистрация учителя', form=form)
