@@ -1,3 +1,4 @@
+# Функция возвращает расписание по классу
 def get_class_schedule(number, letter):
     import openpyxl
     wb = openpyxl.load_workbook("static/school_schedule.xlsx")

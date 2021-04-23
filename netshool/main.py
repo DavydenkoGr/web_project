@@ -9,8 +9,8 @@ from forms.set_marks import MarksSettingForm
 from flask import Flask, render_template, redirect, request, abort, make_response, jsonify, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import abort, Api
-
 from wtforms import SelectField, FieldList
+from xlsx_reader import get_class_schedule
 
 
 app = Flask(__name__)
@@ -44,12 +44,23 @@ def index():
 
 
 @app.route("/studentdiary")
+@login_required
 def studentdiary():
-    return render_template("studentdiary.html", title='Электронный дневник', dont_add_container=True)
+    if type_of_user != 'student':
+        return redirect('/')
+    db_sess = db_session.create_session()
+    school_class = db_sess.query(SchoolClass).filter(current_user.school_class_id == SchoolClass.id
+                                                     ).first()
+    table = get_class_schedule(school_class.number, school_class.letter)
+    return render_template("studentdiary.html", title='Электронный дневник',
+                           table=table, size=len(table), dont_add_container=True)
 
 
 @app.route("/teacherdiary")
+@login_required
 def teacherdiary():
+    if type_of_user != 'teacher':
+        return redirect('/')
     return render_template("teacherdiary.html", title='Электронный журнал', dont_add_container=True)
 
 

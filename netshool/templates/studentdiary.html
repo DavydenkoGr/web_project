@@ -7,17 +7,17 @@
         <button type="button" class="btn btn-outline-secondary">></button>
     </div>
     {% set weekday = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'] %}
-    {% for i in range(3) %}
+    {% for j in range(3) %}
         <div class="row_tables">
             <table class="table" border="0">
                     <tr>
-                        <th scope="col">{{ weekday[i * 2] }}</th>
+                        <th scope="col">{{ weekday[loop.index0 * 2] }}</th>
                     </tr>
             </table>
             <div class="empty_div"></div>
             <table class="table"  border="0">
                     <tr>
-                        <th scope="col">{{ weekday[i * 2 + 1] }}</th>
+                        <th scope="col">{{ weekday[loop.index0 * 2 + 1] }}</th>
                     </tr>
             </table>
         </div>
@@ -35,7 +35,7 @@
                     {% for i in range(6) %}
                         <tr>
                             <th scope="row">{{ i + 1 }}</th>
-                            <td></td>
+                            <td>{% if size - 1 > i %}{{ table[j * 2][i] }}{% endif %}</td>
                             <td></td>
                             <td></td>
                         </tr>
@@ -58,7 +58,7 @@
                     {% for i in range(6) %}
                         <tr>
                             <th scope="row">{{ i + 1 }}</th>
-                            <td></td>
+                            <td>{% if size - 1 > i %}{{ table[j * 2 + 1][i] }}{% endif %}</td>
                             <td></td>
                             <td></td>
                         </tr>
