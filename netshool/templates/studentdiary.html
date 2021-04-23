@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="btn-group center_div" role="group" aria-label="Basic example">
+        <button type="button" class="btn btn-outline-secondary"><</button>
+        <button type="button" class="btn btn-outline-secondary">Middle</button>
+        <button type="button" class="btn btn-outline-secondary">></button>
+    </div>
+    {% set weekday = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'] %}
+    {% for i in range(3) %}
+        <div class="row_tables">
+            <table class="table" border="0">
+                    <tr>
+                        <th scope="col">{{ weekday[i * 2] }}</th>
+                    </tr>
+            </table>
+            <div class="empty_div"></div>
+            <table class="table"  border="0">
+                    <tr>
+                        <th scope="col">{{ weekday[i * 2 + 1] }}</th>
+                    </tr>
+            </table>
+        </div>
+        <div class="row_tables">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Урок</th>
+                        <th scope="col">Домашнее задание</th>
+                        <th scope="col">Оценка</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in range(6) %}
+                        <tr>
+                            <th scope="row">{{ i + 1 }}</th>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="empty_div"></div>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Урок</th>
+                        <th scope="col">Домашнее задание</th>
+                        <th scope="col">Оценка</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in range(6) %}
+                        <tr>
+                            <th scope="row">{{ i + 1 }}</th>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endfor %}
+{% endblock %}

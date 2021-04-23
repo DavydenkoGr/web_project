@@ -5,9 +5,12 @@ from data.students import Student
 from data.subjects import Subject
 from data.teachers import Teacher
 from forms.registration import RegisterStudentForm, RegisterTeacherForm, LoginForm
+from forms.set_marks import MarksSettingForm
 from flask import Flask, render_template, redirect, request, abort, make_response, jsonify, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import abort, Api
+
+from wtforms import SelectField, FieldList
 
 
 app = Flask(__name__)
@@ -38,6 +41,35 @@ def logout():
 @app.route("/")
 def index():
     return render_template("base.html", title='Электронный дневник')
+
+
+@app.route("/studentdiary")
+def studentdiary():
+    return render_template("studentdiary.html", title='Электронный дневник', dont_add_container=True)
+
+
+@app.route("/teacherdiary")
+def teacherdiary():
+    return render_template("teacherdiary.html", title='Электронный журнал', dont_add_container=True)
+
+
+@app.route("/teacherdiary/set_marks/<int:class_id>", methods=['GET', 'POST'])
+@login_required
+def set_marks(class_id):
+    if type_of_user != 'teacher':
+        return redirect('/')
+    db_sess = db_session.create_session()
+    students = db_sess.query(Student).filter(Student.school_class_id == class_id).all()
+    MarksSettingForm.marks = FieldList(SelectField("Оценка", choices=['', 5, 4, 3, 2]),
+                                       min_entries=len(students))
+    form = MarksSettingForm()
+    if request.method == 'POST':
+        # Сохранение оценок
+        print(form.homework.data)
+        print(form.marks.data)
+        return redirect('/teacherdiary')
+    return render_template("set_marks.html", title='Выставление оценок',
+                           form=form, students=students)
 
 
 @app.route('/register_student', methods=['GET', 'POST'])
@@ -126,13 +158,13 @@ def login():
         if teacher and teacher.check_password(form.password.data):
             type_of_user = 'teacher'
             login_user(teacher, remember=form.remember_me.data)
-            return redirect("/")
+            return redirect("/teacherdiary")
         # Если учитель не найден, пройдемся по ученикам
         student = db_sess.query(Student).filter(Student.email == form.email.data).first()
         if student and student.check_password(form.password.data):
             type_of_user = 'student'
             login_user(student, remember=form.remember_me.data)
-            return redirect("/")
+            return redirect("/studentdiary")
         return render_template('login.html',
                                message="Неправильно указана почта или пароль",
                                form=form)

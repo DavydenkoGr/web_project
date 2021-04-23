@@ -7,3 +7,22 @@ background-color: #D1B280;
 border: 2px solid #D1B280;
 color: black;
 }
+
+.row_tables{
+Display: flex;
+Flex-direction: row;
+padding:20px;
+}
+
+.empty_div{
+margin: 0px 125px 0px 0px;
+}
+
+.center_div{
+    margin:25px 42% 0 42%;
+    width: 16%;
+
+.marks_table{
+    width: 500px;
+    table-layout: fixed;
+}
