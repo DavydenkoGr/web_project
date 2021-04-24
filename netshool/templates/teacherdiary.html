@@ -39,13 +39,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for i in range(6) %}
+                    {% for j in range(6) %}
                         <tr>
-                            <th scope="row">{{ i + 1 }}</th>
-                            <td></td>
+                            <th scope="row">{{ j + 1 }}</th>
+                            <td>{% if table[0][i][j] %}{{ table[0][i][j] }}{% endif %}</td>
                             <td></td>
                             <td width="40" style="text-align:center"><a type="button"
-                                                                        href="/teacherdiary/set_marks/{{ 1 }}" class="btn btn-outline-secondary">+</a></td>
+                                                                        {% if id_table[0][i][j] %}
+                                                                        href="/teacherdiary/set_marks/{{ id_table[0][i][j] }}"
+                                                                        {% endif %}
+                                                                        class="btn btn-outline-secondary">+</a></td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -63,13 +66,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for i in range(6) %}
+                    {% for j in range(6) %}
                         <tr>
-                            <th scope="row">{{ i + 1 }}</th>
-                            <td></td>
+                            <th scope="row">{{ j + 1 }}</th>
+                            <td>{% if table[1][i][j] %}{{ table[1][i][j] }}{% endif %}</td>
                             <td></td>
                             <td width="40" style="text-align:center"><a type="button"
-                                                                        href="/teacherdiary/set_marks/{{ 1 }}" class="btn btn-outline-secondary">+</a></td>
+                                                                        {% if id_table[0][i][j] %}
+                                                                        href="/teacherdiary/set_marks/{{ id_table[0][i][j] }}"
+                                                                        {% endif %}
+                                                                        class="btn btn-outline-secondary">+</a></td>
                         </tr>
                     {% endfor %}
                 </tbody>

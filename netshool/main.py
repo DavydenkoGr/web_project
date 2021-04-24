@@ -34,6 +34,8 @@ def load_user(user_id):
 @app.route('/logout')
 @login_required
 def logout():
+    global type_of_user
+    type_of_user = None
     logout_user()
     return redirect("/")
 
@@ -61,7 +63,22 @@ def studentdiary():
 def teacherdiary():
     if type_of_user != 'teacher':
         return redirect('/')
-    return render_template("teacherdiary.html", title='Электронный журнал', dont_add_container=True)
+    db_sess = db_session.create_session()
+    teacher_schedule = [[[None for _ in range(6)] for _ in range(6)] for _ in range(2)]
+    id_table = [[[None for _ in range(6)] for _ in range(6)] for _ in range(2)]
+    subject = db_sess.query(Subject).filter(Subject.id == current_user.subject_id
+                                            ).first()
+    teacher = db_sess.query(Teacher).filter(Teacher.id == current_user.id).first()
+    for school_class in teacher.school_classes:
+        table = get_class_schedule(school_class.number, school_class.letter)
+        for i in range(len(table)):
+            for j in range(len(table[i])):
+                if table[i][j] == subject.name:
+                    teacher_schedule[(school_class.number + 1) % 2][i][j] = \
+                        f"{school_class.number} {school_class.letter}"
+                    id_table[(school_class.number + 1) % 2][i][j] = school_class.id
+    return render_template("teacherdiary.html", title='Электронный журнал', dont_add_container=True,
+                           table=teacher_schedule, id_table=id_table)
 
 
 @app.route("/teacherdiary/set_marks/<int:class_id>", methods=['GET', 'POST'])
@@ -70,6 +87,10 @@ def set_marks(class_id):
     if type_of_user != 'teacher':
         return redirect('/')
     db_sess = db_session.create_session()
+    teacher = db_sess.query(Teacher).filter(Teacher.id == current_user.id).first()
+    school_class = db_sess.query(SchoolClass).filter(SchoolClass.id == class_id).first()
+    if not school_class or school_class not in teacher.school_classes:
+        return redirect('/teacherdiary')
     students = db_sess.query(Student).filter(Student.school_class_id == class_id).all()
     MarksSettingForm.marks = FieldList(SelectField("Оценка", choices=['', 5, 4, 3, 2]),
                                        min_entries=len(students))
