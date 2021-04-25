@@ -57,9 +57,20 @@ def studentdiary(week):
     school_class = db_sess.query(SchoolClass).filter(current_user.school_class_id == SchoolClass.id
                                                      ).first()
     table = get_class_schedule(school_class.number, school_class.letter)
+
+    # Выберем среди оценок ученика оценки на эту неделю
+    mark_table = [['' for _ in range(6)] for _ in range(6)]
+    all_student_marks = db_sess.query(Marks).filter(Marks.student_id == current_user.id).all()
+    for subject_marks in all_student_marks:
+        sm = subject_marks.marks.split()
+        for mark in sm:
+            mark_week, weekday, lesson_number, mark = list(map(int, mark.split('/')))
+            if mark_week == week:
+                mark_table[weekday][lesson_number - 1] = mark
     return render_template("studentdiary.html", title='Электронный дневник',
-                           table=table, size=len(table), dont_add_container=True,
-                           week=week, week_list=week_list, holidays=holidays)
+                           table=table, dont_add_container=True,
+                           sizes=[len(table), [len(table[i]) for i in range(len(table))]],
+                           week=week, week_list=week_list, holidays=holidays, mark_table=mark_table)
 
 
 @app.route("/teacherdiary/<int:week>")
