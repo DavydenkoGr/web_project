@@ -11,6 +11,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from flask_restful import abort, Api
 from wtforms import SelectField, FieldList
 from xlsx_reader import get_class_schedule
+from date_and_time import *
 
 
 app = Flask(__name__)
@@ -45,11 +46,13 @@ def index():
     return render_template("base.html", title='Электронный дневник')
 
 
-@app.route("/studentdiary")
+@app.route("/studentdiary/<int:week>")
 @login_required
-def studentdiary():
+def studentdiary(week):
     if type_of_user != 'student':
         return redirect('/')
+    if week not in range(1, 54):
+        return redirect('/studentdiary/1')
     db_sess = db_session.create_session()
     school_class = db_sess.query(SchoolClass).filter(current_user.school_class_id == SchoolClass.id
                                                      ).first()
@@ -58,11 +61,13 @@ def studentdiary():
                            table=table, size=len(table), dont_add_container=True)
 
 
-@app.route("/teacherdiary")
+@app.route("/teacherdiary/<int:week>")
 @login_required
-def teacherdiary():
+def teacherdiary(week):
     if type_of_user != 'teacher':
         return redirect('/')
+    if week not in range(1, 54):
+        return redirect('/teacherdiary/1')
     db_sess = db_session.create_session()
     teacher_schedule = [[[None for _ in range(6)] for _ in range(6)] for _ in range(2)]
     id_table = [[[None for _ in range(6)] for _ in range(6)] for _ in range(2)]
