@@ -29,13 +29,13 @@
             </table>
         </div>
         <div class="row_tables">
-            <table class="table table-bordered">
+            <table class="table table-bordered" style="table-layout: fixed;">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Класс</th>
-                        <th scope="col">Домашнее задание</th>
-                        <th scope="col">Оценки</th>
+                        <th scope="col" style="width:20px; height: 20px">#</th>
+                        <th scope="col" style="width:80px; height: 20px">Класс</th>
+                        <th scope="col" style="width:235px; height: 20px">Домашнее задание</th>
+                        <th scope="col" style="width:38px; height: 20px">Оценки</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,7 +44,7 @@
                             <th scope="row">{{ j + 1 }}</th>
                             {% if [week, i] not in holidays %}
                             <td>{% if table[0][i][j] %}{{ table[0][i][j] }}{% endif %}</td>
-                            <td></td>
+                            <td style="word-wrap: break-word">{{ homework_table[0][i][j] }}</td>
                             <td width="40" style="text-align:center"><a type="button"
                                                                         {% if id_table[0][i][j] %}
                                                                         href="/teacherdiary/{{ week }}/{{ i }}/{{ j + 1 }}"
@@ -62,13 +62,13 @@
 
             <div class="empty_div"></div>
 
-            <table class="table table-bordered">
+            <table class="table table-bordered" style="table-layout: fixed;">
                 <thead>
                     <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Класс</th>
-                        <th scope="col">Домашнее задание</th>
-                        <th scope="col">Оценки</th>
+                        <th scope="col" style="width:20px; height: 20px">#</th>
+                        <th scope="col" style="width:80px; height: 20px">Класс</th>
+                        <th scope="col" style="width:235px; height: 20px">Домашнее задание</th>
+                        <th scope="col" style="width:38px; height: 20px">Оценки</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -77,9 +77,9 @@
                             <th scope="row">{{ j + 1 }}</th>
                             {% if [week, i] not in holidays %}
                             <td>{% if table[1][i][j] %}{{ table[1][i][j] }}{% endif %}</td>
-                            <td></td>
+                            <td style="word-wrap: break-word">{{ homework_table[1][i][j] }}</td>
                             <td width="40" style="text-align:center"><a type="button"
-                                                                        {% if id_table[0][i][j] %}
+                                                                        {% if id_table[1][i][j] %}
                                                                         href="/teacherdiary/{{ week }}/{{ i }}/{{ j + 7 }}"
                                                                         {% endif %}
                                                                         class="btn btn-outline-secondary">+</a></td>

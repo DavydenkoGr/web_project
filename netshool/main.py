@@ -4,6 +4,7 @@ from data.school_classes import SchoolClass
 from data.students import Student
 from data.subjects import Subject
 from data.teachers import Teacher
+from data.homework import Homework
 from forms.registration import RegisterStudentForm, RegisterTeacherForm, LoginForm
 from forms.set_marks import MarksSettingForm
 from flask import Flask, render_template, redirect, request, abort, make_response, jsonify, url_for
@@ -67,10 +68,25 @@ def studentdiary(week):
             mark_week, weekday, lesson_number, mark = list(map(int, mark.split('/')))
             if mark_week == week:
                 mark_table[weekday][lesson_number - 1] = mark
+    # Заполнение таблицы с домашними заданиями
+    homework_table = [['' for _ in range(6)] for _ in range(6)]
+    for i in range(len(table)):
+        for j in range(len(table[i])):
+            subject = db_sess.query(Subject).filter(Subject.name == table[i][j]
+                                                    ).first()
+            homework = db_sess.query(Homework).filter(Homework.subject_id == subject.id,
+                                                      Homework.class_id == school_class.id,
+                                                      Homework.date_info ==
+                                                      f"{week}/{i}/{j + 1}"
+                                                      ).first()
+            if homework:
+                homework_table[i][j] = homework.task
+
     return render_template("studentdiary.html", title='Электронный дневник',
                            table=table, dont_add_container=True,
                            sizes=[len(table), [len(table[i]) for i in range(len(table))]],
-                           week=week, week_list=week_list, holidays=holidays, mark_table=mark_table)
+                           week=week, week_list=week_list, holidays=holidays, mark_table=mark_table,
+                           homework_table=homework_table)
 
 
 @app.route("/teacherdiary/<int:week>")
@@ -81,11 +97,14 @@ def teacherdiary(week):
     if week not in range(1, 41):
         return redirect(f"/teacherdiary/{to_now_week()}")
     db_sess = db_session.create_session()
+    # Создадим все необходимые таблички для работы с дневником
     teacher_schedule = [[[None for _ in range(6)] for _ in range(6)] for _ in range(2)]
     id_table = [[[None for _ in range(6)] for _ in range(6)] for _ in range(2)]
+    homework_table = [[['' for _ in range(6)] for _ in range(6)] for _ in range(2)]
     subject = db_sess.query(Subject).filter(Subject.id == current_user.subject_id
                                             ).first()
     teacher = db_sess.query(Teacher).filter(Teacher.id == current_user.id).first()
+    # Заполняем таблицы
     for school_class in teacher.school_classes:
         table = get_class_schedule(school_class.number, school_class.letter)
         for i in range(len(table)):
@@ -94,9 +113,18 @@ def teacherdiary(week):
                     teacher_schedule[(school_class.number + 1) % 2][i][j] = \
                         f"{school_class.number} {school_class.letter}"
                     id_table[(school_class.number + 1) % 2][i][j] = school_class.id
+                    # Если этот класс имеет урок в этот день, возможно у него есть домашнее задание
+                    homework = db_sess.query(Homework).filter(Homework.subject_id == subject.id,
+                                                              Homework.class_id == school_class.id,
+                                                              Homework.date_info ==
+                                                              f"{week}/{i}/{j + 1}"
+                                                              ).first()
+                    if homework:
+                        homework_table[(school_class.number + 1) % 2][i][j] = homework.task
     return render_template("teacherdiary.html", title='Электронный журнал', dont_add_container=True,
                            table=teacher_schedule, id_table=id_table,
-                           week=week, week_list=week_list, holidays=holidays)
+                           week=week, week_list=week_list, holidays=holidays,
+                           homework_table=homework_table)
 
 
 @app.route("/teacherdiary/<int:week>/<int:weekday>/<int:lesson_number>", methods=['GET', 'POST'])
@@ -118,10 +146,11 @@ def set_marks(week, weekday, lesson_number):
     subject = db_sess.query(Subject).filter(Subject.id == current_user.subject_id
                                             ).first()
     for school_class in teacher.school_classes:
+        if not(lesson_number > 6 and school_class.number % 2 == 0 or
+               lesson_number < 6 and school_class.number % 2 == 1):
+            continue
         if lesson_number > 6 and school_class.number % 2 == 0:
             lesson_number -= 6
-        elif lesson_number > 6:
-            continue
         table = get_class_schedule(school_class.number, school_class.letter)
         if len(table) > weekday and len(table[weekday]) > lesson_number - 1 and\
                 table[weekday][lesson_number - 1] == subject.name:
@@ -129,10 +158,21 @@ def set_marks(week, weekday, lesson_number):
     if not class_id:
         return redirect(f"/teacherdiary/{to_now_week()}")
     # Создаем поля оценок для каждого ученика из данного класса
+    # К сожалению оценки задать как не получится, в отличии от домашней работы
+    # если учитель решит изменить оценки в этот день, менять придется всем
     students = db_sess.query(Student).filter(Student.school_class_id == class_id).all()
     MarksSettingForm.marks = FieldList(SelectField("Оценка", choices=['', 5, 4, 3, 2]),
                                        min_entries=len(students))
     form = MarksSettingForm()
+    # Если имеется домашняя работа на этот день, выведем её
+    if request.method != 'POST':
+        homework = db_sess.query(Homework).filter(Homework.subject_id == subject.id,
+                                                  Homework.class_id == class_id,
+                                                  Homework.date_info ==
+                                                  f"{week}/{weekday}/{lesson_number}"
+                                                  ).first()
+        if homework:
+            form.homework.data = homework.task
     if request.method == 'POST':
         # Сохранение оценок
         # Оценки ученика представляют собой строку вида
@@ -142,7 +182,8 @@ def set_marks(week, weekday, lesson_number):
         # поиск может длиться слишком долго
         for i, mark in enumerate(form.marks.data):
             student_marks = db_sess.query(Marks).filter(Marks.student_id == students[i].id,
-                                                        Marks.subject_id == subject.id).first()
+                                                        Marks.subject_id == subject.id
+                                                        ).first()
             # Если нет оценки, проверяем убирает ли её учитель или не просто не поставил
             if not mark:
                 if student_marks and f"{week}/{weekday}/{lesson_number}" in student_marks.marks:
@@ -182,8 +223,31 @@ def set_marks(week, weekday, lesson_number):
             # Заносим оценку в конец
             student_marks.marks += f" {mark_string}"
         db_sess.commit()
-        # Сохранение домашнего задания
-        print(form.homework.data)
+        # Сохранение домашнего задания не может производиться аналогично сохранению оценок
+        # из-за возможности наличия любого символа в домашнем задании,
+        # однако домашних заданий будет примерно в 30 раз меньше чем учеников,
+        # что даст нам более быстрый поиск
+        homework = db_sess.query(Homework).filter(Homework.subject_id == subject.id,
+                                                  Homework.class_id == class_id,
+                                                  Homework.date_info ==
+                                                  f"{week}/{weekday}/{lesson_number}"
+                                                  ).first()
+        if not form.homework.data:
+            if homework and f"{week}/{weekday}/{lesson_number}" == homework.date_info:
+                homework.task = ""
+        else:
+            if not homework:
+                print(1)
+                homework = Homework(
+                    subject_id=subject.id,
+                    class_id=class_id,
+                    task=form.homework.data,
+                    date_info=f"{week}/{weekday}/{lesson_number}"
+                )
+                db_sess.add(homework)
+            else:
+                homework.task=form.homework.data
+        db_sess.commit()
         return redirect(f"/teacherdiary/{week}")
     return render_template("set_marks.html", title='Выставление оценок',
                            form=form, students=students, week=week)
@@ -347,6 +411,7 @@ def login():
 
 def main():
     db_session.global_init("db/netschool.db")
+    print(holidays)
     app.run()
 
 
