@@ -51,14 +51,15 @@ def index():
 def studentdiary(week):
     if type_of_user != 'student':
         return redirect('/')
-    if week not in range(1, 54):
-        return redirect('/studentdiary/1')
+    if week not in range(1, 41):
+        return redirect(f"/studentdiary/{to_now_week()}")
     db_sess = db_session.create_session()
     school_class = db_sess.query(SchoolClass).filter(current_user.school_class_id == SchoolClass.id
                                                      ).first()
     table = get_class_schedule(school_class.number, school_class.letter)
     return render_template("studentdiary.html", title='Электронный дневник',
-                           table=table, size=len(table), dont_add_container=True)
+                           table=table, size=len(table), dont_add_container=True,
+                           week=week, week_list=week_list, holidays=holidays)
 
 
 @app.route("/teacherdiary/<int:week>")
@@ -66,8 +67,8 @@ def studentdiary(week):
 def teacherdiary(week):
     if type_of_user != 'teacher':
         return redirect('/')
-    if week not in range(1, 54):
-        return redirect('/teacherdiary/1')
+    if week not in range(1, 41):
+        return redirect(f"/teacherdiary/{to_now_week()}")
     db_sess = db_session.create_session()
     teacher_schedule = [[[None for _ in range(6)] for _ in range(6)] for _ in range(2)]
     id_table = [[[None for _ in range(6)] for _ in range(6)] for _ in range(2)]
@@ -83,30 +84,56 @@ def teacherdiary(week):
                         f"{school_class.number} {school_class.letter}"
                     id_table[(school_class.number + 1) % 2][i][j] = school_class.id
     return render_template("teacherdiary.html", title='Электронный журнал', dont_add_container=True,
-                           table=teacher_schedule, id_table=id_table)
+                           table=teacher_schedule, id_table=id_table,
+                           week=week, week_list=week_list, holidays=holidays)
 
 
-@app.route("/teacherdiary/set_marks/<int:class_id>", methods=['GET', 'POST'])
+@app.route("/teacherdiary/<int:week>/<int:weekday>/<int:lesson_number>", methods=['GET', 'POST'])
 @login_required
-def set_marks(class_id):
+def set_marks(week, weekday, lesson_number):
     if type_of_user != 'teacher':
         return redirect('/')
+    # Проверяем существование класса, номера урока и недели
+    if not (lesson_number in range(1, 12) and weekday in range(0, 6) and week in range(1, 41)):
+        return redirect(f"/teacherdiary/{to_now_week()}")
+    # Проверка на выходной день
+    if [week, weekday] in holidays:
+        return redirect(f"/teacherdiary/{to_now_week()}")
+    # Проверяем существует ли класс у учителя, который имеет урок в данный день
+    # Если да, находим его id
+    class_id = None
     db_sess = db_session.create_session()
     teacher = db_sess.query(Teacher).filter(Teacher.id == current_user.id).first()
-    school_class = db_sess.query(SchoolClass).filter(SchoolClass.id == class_id).first()
-    if not school_class or school_class not in teacher.school_classes:
-        return redirect('/teacherdiary')
+    subject = db_sess.query(Subject).filter(Subject.id == current_user.subject_id
+                                            ).first()
+    for school_class in teacher.school_classes:
+        if lesson_number > 6 and school_class.number % 2 == 0:
+            lesson_number -= 6
+        elif lesson_number > 6:
+            continue
+        table = get_class_schedule(school_class.number, school_class.letter)
+        if len(table) > weekday and len(table[weekday]) > lesson_number - 1 and\
+                table[weekday][lesson_number - 1] == subject.name:
+            class_id = school_class.id
+    if not class_id:
+        return redirect(f"/teacherdiary/{to_now_week()}")
+    # Создаем поля оценок для каждого ученика из данного класса
     students = db_sess.query(Student).filter(Student.school_class_id == class_id).all()
     MarksSettingForm.marks = FieldList(SelectField("Оценка", choices=['', 5, 4, 3, 2]),
                                        min_entries=len(students))
     form = MarksSettingForm()
     if request.method == 'POST':
         # Сохранение оценок
+        # Оценки ученика представляют собой строку вида
+        # "номер недели/день недели/оценка номер недели/день недели/оценка..."
+        # Удобней бы было сохранять каждую оценку с указанием даты, однако, если брать в расчет
+        # количество учеников в школе и количество оценок каждого ученика,
+        # поиск может длиться слишком долго
         print(form.homework.data)
         print(form.marks.data)
-        return redirect('/teacherdiary')
+        return redirect(f"/teacherdiary/{week}")
     return render_template("set_marks.html", title='Выставление оценок',
-                           form=form, students=students)
+                           form=form, students=students, week=week)
 
 
 @app.route('/register_student', methods=['GET', 'POST'])
@@ -252,13 +279,13 @@ def login():
         if teacher and teacher.check_password(form.password.data):
             type_of_user = 'teacher'
             login_user(teacher, remember=form.remember_me.data)
-            return redirect("/teacherdiary")
+            return redirect(f"/teacherdiary/{to_now_week()}")
         # Если учитель не найден, пройдемся по ученикам
         student = db_sess.query(Student).filter(Student.email == form.email.data).first()
         if student and student.check_password(form.password.data):
             type_of_user = 'student'
             login_user(student, remember=form.remember_me.data)
-            return redirect("/studentdiary")
+            return redirect(f"/studentdiary/{to_now_week()}")
         return render_template('login.html',
                                message="Неправильно указана почта или пароль",
                                form=form)

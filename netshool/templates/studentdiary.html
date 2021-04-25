@@ -2,9 +2,9 @@
 
 {% block content %}
     <div class="btn-group center_div" role="group" aria-label="Basic example">
-        <button type="button" class="btn btn-outline-secondary"><</button>
-        <button type="button" class="btn btn-outline-secondary">Middle</button>
-        <button type="button" class="btn btn-outline-secondary">></button>
+        <a type="button" class="btn btn-outline-secondary" {% if week - 1 > 0 %}href="/studentdiary/{{ week - 1 }}"{% endif %}><</a>
+        <a type="button" class="btn btn-outline-secondary">{{ week_list[week - 1] }}</a>
+        <a type="button" class="btn btn-outline-secondary" {% if week + 1 < 41 %}href="/studentdiary/{{ week + 1 }}"{% endif %}>></a>
     </div>
     {% set weekday = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'] %}
     {% for j in range(3) %}
@@ -35,9 +35,15 @@
                     {% for i in range(6) %}
                         <tr>
                             <th scope="row">{{ i + 1 }}</th>
+                            {% if [week, j * 2] not in holidays %}
                             <td>{% if size - 1 > i %}{{ table[j * 2][i] }}{% endif %}</td>
                             <td></td>
                             <td></td>
+                            {% else %}
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -58,9 +64,15 @@
                     {% for i in range(6) %}
                         <tr>
                             <th scope="row">{{ i + 1 }}</th>
+                            {% if [week, j * 2 + 1] not in holidays %}
                             <td>{% if size - 1 > i %}{{ table[j * 2 + 1][i] }}{% endif %}</td>
                             <td></td>
                             <td></td>
+                            {% else %}
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </tbody>

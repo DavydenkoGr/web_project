@@ -34,7 +34,7 @@ def holidays():
             f_d, s_d = f_d.split('.'), s_d.split('.')
             if datetime.date(int(f_d[2]), int(f_d[1]), int(f_d[0])) <= now and \
                     datetime.date(int(s_d[2]), int(s_d[1]), int(s_d[0])) >= now:
-                res.append(f"{i.split('/')[0]}/{weekday}")
+                res.append([int(i.split('/')[0]), weekday])
         if not (int(month) in range(8, 13)):
             year -= 1
     return res
@@ -51,7 +51,7 @@ def create_week_list(first_day):
     else:
         first_date = datetime.date(year, 8, 32 - first_day)
     a = datetime.date(year, first_date.month, first_date.day)
-    for i in range(53):
+    for i in range(40):
         b = datetime.timedelta(days=7)
         # Номер недели/первый день неди-последний день недели, включая воскресенье
         res.append(f"{i + 1}/{a.day}.{a.month}.{a.year}-"
@@ -65,7 +65,7 @@ def to_now_week():
     now = datetime.datetime.now()
     now = datetime.date(now.year, now.month, now.day)
     if now.month in range(6, 8):
-        return '53'
+        return '40'
     elif now.month == 8:
         return '1'
     else:
