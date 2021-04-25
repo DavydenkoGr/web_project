@@ -125,12 +125,54 @@ def set_marks(week, weekday, lesson_number):
     if request.method == 'POST':
         # Сохранение оценок
         # Оценки ученика представляют собой строку вида
-        # "номер недели/день недели/оценка номер недели/день недели/оценка..."
+        # "номер недели/день недели/номер урока/оценка номер недели/день недели/номер урока/оценка..."
         # Удобней бы было сохранять каждую оценку с указанием даты, однако, если брать в расчет
         # количество учеников в школе и количество оценок каждого ученика,
         # поиск может длиться слишком долго
+        for i, mark in enumerate(form.marks.data):
+            student_marks = db_sess.query(Marks).filter(Marks.student_id == students[i].id,
+                                                        Marks.subject_id == subject.id).first()
+            # Если нет оценки, проверяем убирает ли её учитель или не просто не поставил
+            if not mark:
+                if student_marks and f"{week}/{weekday}/{lesson_number}" in student_marks.marks:
+                    sm = student_marks.marks.split()
+                    for m in sm:
+                        if f"{week}/{weekday}/{lesson_number}" in m:
+                            sm.remove(m)
+                            sm = ' '.join(sm)
+                            student_marks.marks = sm
+                            break
+                continue
+            # Если оценка есть, то её либо выставляют, либо редактируют
+            mark_string = f"{week}/{weekday}/{lesson_number}/{mark}"
+            # Проверяем есть ли у ученика оценки по этому предмету
+            if not student_marks:
+                marks = Marks(
+                    subject_id=subject.id,
+                    student_id=students[i].id,
+                    marks=mark_string
+                )
+                db_sess.add(marks)
+                continue
+            # Если оценки были, но их убрали
+            elif not student_marks.marks:
+                student_marks.marks = mark_string
+                continue
+            # Если оценки есть
+            # Если оценка редактируется удаляем её
+            if f"{week}/{weekday}/{lesson_number}" in student_marks.marks:
+                sm = student_marks.marks.split()
+                for m in sm:
+                    if f"{week}/{weekday}/{lesson_number}" in m:
+                        sm.remove(m)
+                        sm = ' '.join(sm)
+                        student_marks.marks = sm
+                        break
+            # Заносим оценку в конец
+            student_marks.marks += f" {mark_string}"
+        db_sess.commit()
+        # Сохранение домашнего задания
         print(form.homework.data)
-        print(form.marks.data)
         return redirect(f"/teacherdiary/{week}")
     return render_template("set_marks.html", title='Выставление оценок',
                            form=form, students=students, week=week)

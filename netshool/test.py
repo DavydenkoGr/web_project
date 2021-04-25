@@ -1,1 +1,1 @@
-print([[None for _ in range(6)] for _ in range(6)])
+print('1'.join([]))
