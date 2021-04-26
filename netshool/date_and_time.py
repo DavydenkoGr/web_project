@@ -29,12 +29,12 @@ def holidays():
             year += 1
         now = datetime.date(year, int(month), int(day))
         weekday = now.weekday()
-        for i in week_list:
-            f_d, s_d = i.split('/')[1].split('-')
+        for j in week_list:
+            f_d, s_d = j.split('/')[1].split('-')
             f_d, s_d = f_d.split('.'), s_d.split('.')
             if datetime.date(int(f_d[2]), int(f_d[1]), int(f_d[0])) <= now and \
                     datetime.date(int(s_d[2]), int(s_d[1]), int(s_d[0])) >= now:
-                res.append([int(i.split('/')[0]), weekday])
+                res.append([int(j.split('/')[0]), weekday])
         if not (int(month) in range(8, 13)):
             year -= 1
     return res
@@ -52,11 +52,11 @@ def create_week_list(first_day):
         first_date = datetime.date(year, 8, 32 - first_day)
     a = datetime.date(year, first_date.month, first_date.day)
     for i in range(40):
-        b = datetime.timedelta(days=7)
+        b = datetime.timedelta(days=6)
         # Номер недели/первый день неди-последний день недели, включая воскресенье
         res.append(f"{i + 1}/{a.day}.{a.month}.{a.year}-"
                    f"{(a + b).day}.{(a + b).month}.{(a + b).year}")
-        a = a + b
+        a = a + b + datetime.timedelta(days=1)
     return res
 
 

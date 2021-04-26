@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <button id="btnGroupDrop1" style="margin: 15px 15px" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+      {{ semester }} полугодие
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+      <li><a class="dropdown-item" href="/studentreport/1">1 полугодие</a></li>
+      <li><a class="dropdown-item" href="/studentreport/2">2 полугодие</a></li>
+    </ul>
+     <table class="table table-bordered" style="table-layout: fixed; width: 54%">
+                <thead>
+                    <tr>
+                        <th scope="col" rowspan="2" colspan="8">Предмет</th>
+                        <th scope="col" colspan="5">Оценки</th>
+                    </tr>
+                    <tr>
+                        <th scope="col">5</th>
+                        <th scope="col">4</th>
+                        <th scope="col">3</th>
+                        <th scope="col">2</th>
+                        <th scope="col">Ср.балл</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in table %}
+                        <tr>
+                            <td colspan="8" >{{ row[0] }}</td>
+                            {% for i in range(1, 6) %}
+                                <td>{% if row[i] %}{{ row[i] }}{% endif %}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <td colspan="8" style="text-align: center">Итого</td>
+                        {% for i in range(4) %}
+                            <td>{% if total[i] %}{{ total[i] }}{% endif %}</td>
+                        {% endfor %}
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+{% endblock %}

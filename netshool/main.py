@@ -7,9 +7,9 @@ from data.teachers import Teacher
 from data.homework import Homework
 from forms.registration import RegisterStudentForm, RegisterTeacherForm, LoginForm
 from forms.set_marks import MarksSettingForm
-from flask import Flask, render_template, redirect, request, abort, make_response, jsonify, url_for
+from flask import Flask, render_template, redirect, request
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from flask_restful import abort, Api
+from flask_restful import Api
 from wtforms import SelectField, FieldList
 from xlsx_reader import get_class_schedule
 from date_and_time import *
@@ -44,7 +44,48 @@ def logout():
 
 @app.route("/")
 def index():
-    return render_template("base.html", title='Электронный дневник')
+    return render_template("index.html", title='Объявления', dont_add_container=True)
+
+
+@app.route("/studentreport/<int:semester>")
+@login_required
+def report(semester):
+    if type_of_user != "student":
+        return redirect('/')
+    # Отчёты показываются по полугодиям
+    if semester not in range(1, 3):
+        return redirect(f"/studentdiary/{to_now_week()}")
+    db_sess = db_session.create_session()
+    # Для того, чтобы не вывелись те уроки, которых у ученика нет, пройдёмся по урокам данного класса
+    school_class = db_sess.query(SchoolClass).filter(SchoolClass.id == current_user.school_class_id
+                                                     ).first()
+    table = list()
+    for subject in school_class.subjects:
+        marks = db_sess.query(Marks).filter(Marks.student_id == current_user.id,
+                                                   Marks.subject_id == subject.id).first()
+        # [предмет, кол-во 5, 4, 3, 2, средний балл]
+        s = [subject.name, 0, 0, 0, 0, 0]
+        if not marks or not marks.marks:
+            table.append(s)
+            continue
+        marks_list = marks.marks.split()
+        for mark in marks_list:
+            if semester == 2 and int(mark.split('/')[0]) > 19 or\
+                    semester == 1 and int(mark.split('/')[0]) < 19:
+                s[6 - int(mark.split('/')[-1])] += 1
+        if s[1] + s[2] + s[3] + s[4] == 0:
+            table.append(s)
+            continue
+        # Нарисуем красивое среднее арифметическое
+        s[-1] = str(round(((5 * s[1] + 4 * s[2] + 3 * s[3] + 2 * s[4]) / (s[1] + s[2] + s[3] + s[4])), 2))
+        s[-1] = ','.join(s[-1].split('.'))
+        if len(s[-1]) == 3:
+            s[-1] += '0'
+        table.append(s)
+    total = [sum(table[i][j] for i in range(len(table))) for j in range(1, 5)]
+    print(table, total)
+    return render_template("report.html", title='Отчёты', dont_add_container=True,
+                           table=table, total=total, semester=semester)
 
 
 @app.route("/studentdiary/<int:week>")
@@ -411,7 +452,6 @@ def login():
 
 def main():
     db_session.global_init("db/netschool.db")
-    print(holidays)
     app.run()
 
 
