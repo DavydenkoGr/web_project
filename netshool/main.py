@@ -44,7 +44,14 @@ def logout():
 
 @app.route("/")
 def index():
-    return render_template("index.html", title='Объявления', dont_add_container=True)
+    if type_of_user == "teacher":
+        diary_link = f"/teacherdiary/{to_now_week()}"
+    elif type_of_user == "student":
+        diary_link = f"/studentdiary/{to_now_week()}"
+    else:
+        diary_link = "/"
+    return render_template("index.html", title='Объявления', dont_add_container=True,
+                           diary_link=diary_link, current_page=1)
 
 
 @app.route("/studentreport/<int:semester>")
@@ -53,6 +60,7 @@ def report(semester):
     if type_of_user != "student":
         return redirect('/')
     # Отчёты показываются по полугодиям
+    # Учитель смотреть отчёты не может !!!!!
     if semester not in range(1, 3):
         return redirect(f"/studentdiary/{to_now_week()}")
     db_sess = db_session.create_session()
@@ -83,8 +91,8 @@ def report(semester):
             s[-1] += '0'
         table.append(s)
     total = [sum(table[i][j] for i in range(len(table))) for j in range(1, 5)]
-    print(table, total)
-    return render_template("report.html", title='Отчёты', dont_add_container=True,
+    return render_template("report.html", title='Отчёты', dont_add_container=True, current_page=2,
+                           diary_link=f"/studentdiary/{to_now_week()}",
                            table=table, total=total, semester=semester)
 
 
@@ -123,8 +131,9 @@ def studentdiary(week):
             if homework:
                 homework_table[i][j] = homework.task
 
-    return render_template("studentdiary.html", title='Электронный дневник',
-                           table=table, dont_add_container=True,
+    return render_template("studentdiary.html", title='Электронный дневник', current_page=3,
+                           dont_add_container=True, table=table,
+                           diary_link=f"/studentdiary/{to_now_week()}",
                            sizes=[len(table), [len(table[i]) for i in range(len(table))]],
                            week=week, week_list=week_list, holidays=holidays, mark_table=mark_table,
                            homework_table=homework_table)
@@ -163,7 +172,8 @@ def teacherdiary(week):
                     if homework:
                         homework_table[(school_class.number + 1) % 2][i][j] = homework.task
     return render_template("teacherdiary.html", title='Электронный журнал', dont_add_container=True,
-                           table=teacher_schedule, id_table=id_table,
+                           diary_link=f"/teacherdiary/{to_now_week()}",
+                           current_page=3, table=teacher_schedule, id_table=id_table,
                            week=week, week_list=week_list, holidays=holidays,
                            homework_table=homework_table)
 
@@ -278,7 +288,6 @@ def set_marks(week, weekday, lesson_number):
                 homework.task = ""
         else:
             if not homework:
-                print(1)
                 homework = Homework(
                     subject_id=subject.id,
                     class_id=class_id,
@@ -290,7 +299,8 @@ def set_marks(week, weekday, lesson_number):
                 homework.task=form.homework.data
         db_sess.commit()
         return redirect(f"/teacherdiary/{week}")
-    return render_template("set_marks.html", title='Выставление оценок',
+    return render_template("set_marks.html", title='Выставление оценок', current_page=3,
+                           diary_link=f"/teacherdiary/{to_now_week()}",
                            form=form, students=students, week=week)
 
 
@@ -321,7 +331,8 @@ def register_student():
         db_sess.add(student)
         db_sess.commit()
         return redirect('/login')
-    return render_template('register_student.html', title='Регистрация ученика', form=form)
+    return render_template('register_student.html', title='Регистрация ученика',
+                           form=form)
 
 
 @app.route('/register_teacher', methods=['GET', 'POST'])

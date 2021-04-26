@@ -29,13 +29,13 @@
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
           <ul class="navbar-nav">
             <li class="nav-item">
-              <a class="nav-link active" href="#">Обьявления</a>
+              <a class="nav-link {% if current_page == 1 %}active{% endif %}" href="/">Обьявления</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Отчеты</a>
+              <a class="nav-link {% if current_page == 2 %}active{% endif %}" href="/studentreport/1">Отчеты</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Дневник</a>
+              <a class="nav-link {% if current_page == 3 %}active{% endif %}" href="{{ diary_link }}">Дневник</a>
             </li>
           </ul>
         </div>

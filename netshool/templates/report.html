@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <button id="btnGroupDrop1" style="margin: 15px 15px" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+    <button id="btnGroupDrop1" style="margin: 15px 15px; background-color: #D1B280; color: black" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
       {{ semester }} полугодие
     </button>
     <ul class="dropdown-menu" aria-labelledby="btnGroupDrop1">
       <li><a class="dropdown-item" href="/studentreport/1">1 полугодие</a></li>
       <li><a class="dropdown-item" href="/studentreport/2">2 полугодие</a></li>
     </ul>
-     <table class="table table-bordered" style="table-layout: fixed; width: 54%">
+     <table class="table table-bordered" style="table-layout: fixed; width: 60%">
                 <thead>
                     <tr>
                         <th scope="col" rowspan="2" colspan="8">Предмет</th>
