@@ -13,6 +13,7 @@ from flask_restful import Api
 from wtforms import SelectField, FieldList
 from xlsx_reader import get_class_schedule
 from date_and_time import *
+import os
 
 
 app = Flask(__name__)
@@ -511,7 +512,8 @@ def settings():
 
 def main():
     db_session.global_init("db/netschool.db")
-    app.run()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
 
 
 if __name__ == '__main__':
