@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="btn-group center_div" role="group" aria-label="Basic example">
+        <a type="button" class="btn btn-outline-secondary" {% if week - 1 > 0 %}href="/studentdiary/{{ week - 1 }}"{% endif %}><</a>
+        <a type="button" class="btn btn-outline-secondary">{{ week_list[week - 1] }}</a>
+        <a type="button" class="btn btn-outline-secondary" {% if week + 1 < 41 %}href="/studentdiary/{{ week + 1 }}"{% endif %}>></a>
+    </div>
+    {% set weekday = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'] %}
+    {% for i in range(3) %}
+        <div class="row_tables">
+            <table class="table" border="0">
+                    <tr>
+                        <th scope="col">{{ weekday[loop.index0 * 2] }}</th>
+                    </tr>
+            </table>
+            <div class="empty_div"></div>
+            <table class="table"  border="0">
+                    <tr>
+                        <th scope="col">{{ weekday[loop.index0 * 2 + 1] }}</th>
+                    </tr>
+            </table>
+        </div>
+        <div class="row_tables">
+            <table class="table table-bordered" style="table-layout: fixed;">
+                <thead>
+                    <tr>
+                        <th scope="col" style="width:20px; height: 20px">#</th>
+                        <th scope="col" style="width:80px; height: 20px">Урок</th>
+                        <th scope="col" style="width:235px; height: 20px">Домашнее задание</th>
+                        <th scope="col" style="width:38px; height: 20px">Оценка</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for j in range(6) %}
+                        <tr>
+                            <th scope="row">{{ j + 1 }}</th>
+                            {% if [week, i * 2] not in holidays %}
+                            <td>{% if sizes[0] > i * 2 and sizes[1][i * 2] > j %}{{ table[i * 2][j] }}{% endif %}</td>
+                            <td style="word-wrap: break-word">{{ homework_table[i * 2][j] }}</td>
+                            <td>{{ mark_table[i * 2][j] }}</td>
+                            {% else %}
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="empty_div"></div>
+
+            <table class="table table-bordered" style="table-layout: fixed;">
+                <thead>
+                    <tr>
+                        <th scope="col" style="width:20px; height: 20px">#</th>
+                        <th scope="col" style="width:80px; height: 20px">Урок</th>
+                        <th scope="col" style="width:235px; height: 20px">Домашнее задание</th>
+                        <th scope="col" style="width:38px; height: 20px">Оценка</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for j in range(6) %}
+                        <tr>
+                            <th scope="row">{{ j + 1 }}</th>
+                            {% if [week, i * 2 + 1] not in holidays %}
+                            <td>{% if sizes[0] > i * 2 + 1 and sizes[1][i * 2 + 1] > j %}{{ table[i * 2 + 1][j] }}{% endif %}</td>
+                            <td style="word-wrap: break-word">{{ homework_table[i * 2 + 1][j] }}</td>
+                            <td>{{ mark_table[i * 2 + 1][j] }}</td>
+                            {% else %}
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endfor %}
+{% endblock %}

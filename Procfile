@@ -1,1 +1,1 @@
-web: python netschool/main.py
+web: python netshool/main.py
