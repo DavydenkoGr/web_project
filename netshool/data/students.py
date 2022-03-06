@@ -16,6 +16,7 @@ class Student(SqlAlchemyBase, UserMixin, SerializerMixin):
                               index=True, unique=True, nullable=False)
     school_class_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("school_classes.id"))
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    background_color = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
 
     school_class = orm.relation("SchoolClass")
     marks = orm.relation("Marks", back_populates='student')

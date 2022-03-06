@@ -42,3 +42,10 @@ class LoginForm(FlaskForm):
     password = PasswordField('Пароль', validators=[DataRequired()])
     remember_me = BooleanField('Запомнить меня')
     submit = SubmitField('Войти')
+
+
+class SettingsForm(FlaskForm):
+    old_password = PasswordField('Старый пароль')
+    new_password = PasswordField('Новый пароль')
+    themes = SelectField('Цвета', choices=["Светлый", "Фиолетовый", "Зеленый"])
+    submit = SubmitField('Применить')

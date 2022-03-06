@@ -24,7 +24,7 @@
             {% endif %}
         </div>
     </nav>
-    <nav class="navbar navbar-expand-lg navbar-light" style="background-color:#D1B280">
+    <nav class="navbar navbar-expand-lg navbar-light" style="background-color:{{ background_color }}">
       <div class="container-fluid">
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
           <ul class="navbar-nav">
@@ -32,11 +32,16 @@
               <a class="nav-link {% if current_page == 1 %}active{% endif %}" href="/">Обьявления</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {% if current_page == 2 %}active{% endif %}" href="/studentreport/1">Отчеты</a>
+              <a class="nav-link {% if current_page == 2 %}active{% endif %}" href="{{ report_link }}">Отчеты</a>
             </li>
             <li class="nav-item">
               <a class="nav-link {% if current_page == 3 %}active{% endif %}" href="{{ diary_link }}">Дневник</a>
             </li>
+            {% if current_user.is_authenticated %}
+              <li class="nav-item">
+                <a class="nav-link {% if current_page == 4 %}active{% endif %}" href="/settings">Настройки</a>
+              </li>
+            {% endif %}
           </ul>
         </div>
       </div>

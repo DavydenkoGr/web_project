@@ -10,7 +10,7 @@ db_sess = db_session.create_session()
     db_sess.commit()
     for i in range(1, 12):
         if i == 2:
-            s.append('Английский')
+            s.append('Английский язык')
         if i == 3:
             s.append('Информатика')
         if i == 5:
