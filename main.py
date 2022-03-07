@@ -10,6 +10,7 @@ from forms.set_marks import MarksSettingForm
 from flask import Flask, render_template, redirect, request
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import Api
+import sqlalchemy
 from wtforms import SelectField, FieldList
 from xlsx_reader import get_class_schedule
 from date_and_time import *
@@ -22,16 +23,14 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
 # Переменная, отвечающая за тип пользователя
-type_of_user = None
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    global type_of_user
     db_sess = db_session.create_session()
-    if type_of_user == 'Teacher':
+    if db_sess.query(Teacher).get(user_id):
         return db_sess.query(Teacher).get(user_id)
-    elif type_of_user == 'Student':
+    elif db_sess.query(Student).get(user_id):
         return db_sess.query(Student).get(user_id)
 
 
@@ -335,7 +334,19 @@ def register_student():
         school_class = db_sess.query(SchoolClass).filter(SchoolClass.number == form.class_number.data,
                                                          SchoolClass.letter == form.class_letter.data
                                                          ).first()
+        # Некрасивое решение проблемы с пользовательским id
+        max_student_id = db_sess.query(sqlalchemy.func.max(Student.id)).first()[0]
+        max_teacher_id = db_sess.query(sqlalchemy.func.max(Teacher.id)).first()[0]
+        if max_student_id and max_teacher_id:
+            max_id = max(max_student_id, max_teacher_id) + 1
+        elif max_student_id:
+            max_id = max_student_id + 1
+        elif max_teacher_id:
+            max_id = max_teacher_id + 1
+        else:
+            max_id = 1
         student = Student(
+            id=max_id,
             surname=form.surname.data,
             name=form.name.data,
             email=form.email.data,
@@ -372,6 +383,11 @@ def register_teacher():
         # В зависимости от цифры у некоторых классов присутствуют одни уроки и отсутствуют другие.
         # Проверяем есть ли у данного класса данный урок.
         # Заодно проверяем, нет ли уже у какого-то из выбранных классов учителя по заданному предмету.
+        if not form.classes.data:
+            return render_template('register_teacher.html', title='Регистрация учителя',
+                                   form=form,
+                                   background_color=["#D1B280", "#C292FA", "#7AB996"][0],
+                                   message=f'Выберите хотя бы один класс')
         for number_letter in form.classes.data:
             letter = number_letter[-1]
             number = int(number_letter[:-1])
@@ -390,7 +406,19 @@ def register_teacher():
                                            background_color=["#D1B280", "#C292FA", "#7AB996"][0],
                                            message=f'У {number}{letter} класса уже есть учитель'
                                                    f' по предмету {subject.name}')
+        # Некрасивое решение проблемы с пользовательским id
+        max_student_id = db_sess.query(sqlalchemy.func.max(Student.id)).first()[0]
+        max_teacher_id = db_sess.query(sqlalchemy.func.max(Teacher.id)).first()[0]
+        if max_student_id and max_teacher_id:
+            max_id = max(max_student_id, max_teacher_id) + 1
+        elif max_student_id:
+            max_id = max_student_id + 1
+        elif max_teacher_id:
+            max_id = max_teacher_id + 1
+        else:
+            max_id = 1
         teacher = Teacher(
+            id=max_id,
             surname=form.surname.data,
             name=form.name.data,
             email=form.email.data,
@@ -462,20 +490,17 @@ def register_teacher():
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
-    global type_of_user
     form = LoginForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
         # Сначала пройдемся по учителям
         teacher = db_sess.query(Teacher).filter(Teacher.email == form.email.data).first()
         if teacher and teacher.check_password(form.password.data):
-            type_of_user = 'Teacher'
             login_user(teacher, remember=form.remember_me.data)
             return redirect(f"/teacherdiary/{to_now_week()}")
         # Если учитель не найден, пройдемся по ученикам
         student = db_sess.query(Student).filter(Student.email == form.email.data).first()
         if student and student.check_password(form.password.data):
-            type_of_user = 'Student'
             login_user(student, remember=form.remember_me.data)
             return redirect(f"/studentdiary/{to_now_week()}")
         return render_template('login.html',
@@ -508,12 +533,12 @@ def settings():
     return render_template('settings.html', title='Настройки',
                            diary_link=f"/{diary}/{to_now_week()}",
                            report_link="/studentreport/1",
-                           form=form, background_color=["#D1B280", "#C292FA", "#7AB996"][current_user.background_color])
+                           form=form, current_page=4,
+                           background_color=["#D1B280", "#C292FA", "#7AB996"][current_user.background_color])
 
 
 def main():
     db_session.global_init("db/netschool.db")
-    db_sess = db_session.create_session()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
 

@@ -31,9 +31,8 @@ class RegisterTeacherForm(FlaskForm):
     surname = StringField('Фамилия', validators=[DataRequired()])
     name = StringField('Имя', validators=[DataRequired()])
     subject = SelectField('Предмет', validators=[DataRequired()], choices=s)
-    classes = MultiCheckboxField('Классы', validators=[DataRequired()],
-                                 choices=[(str(i + 1) + j, str(i + 1) + j)
-                                          for i in range(11) for j in ['А', 'Б', 'В', 'Г']])
+    classes = MultiCheckboxField('Классы', choices=[(str(i + 1) + j, str(i + 1) + j)
+                                                    for i in range(11) for j in ['А', 'Б', 'В', 'Г']])
     submit = SubmitField('Зарегистрироваться')
 
 
