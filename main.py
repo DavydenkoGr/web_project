@@ -21,43 +21,41 @@ api = Api(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
-# Переменные, отвечающая за тип пользователя и цвет фона
+# Переменная, отвечающая за тип пользователя
 type_of_user = None
 
 
 @login_manager.user_loader
 def load_user(user_id):
+    global type_of_user
     db_sess = db_session.create_session()
-    if type_of_user == 'teacher':
+    if type_of_user == 'Teacher':
         return db_sess.query(Teacher).get(user_id)
-    elif type_of_user == 'student':
+    elif type_of_user == 'Student':
         return db_sess.query(Student).get(user_id)
 
 
 @app.route('/logout')
 @login_required
 def logout():
-    global type_of_user
-    type_of_user = None
     logout_user()
     return redirect("/")
 
 
 @app.route("/")
 def index():
-    if type_of_user == "teacher":
-        diary_link = f"/teacherdiary/{to_now_week()}"
-        report_link = "/"
-    elif type_of_user == "student":
-        diary_link = f"/studentdiary/{to_now_week()}"
-        report_link = "/studentreport/1"
-    else:
-        diary_link = "/"
-        report_link = "/"
     if current_user.is_authenticated:
         background_color = current_user.background_color
+        if current_user.__class__ == Teacher:
+            diary_link = f"/teacherdiary/{to_now_week()}"
+            report_link = "/"
+        else:
+            diary_link = f"/studentdiary/{to_now_week()}"
+            report_link = "/studentreport/1"
     else:
         background_color = 0
+        diary_link = "/"
+        report_link = "/"
     return render_template("index.html", title='Объявления', dont_add_container=True,
                            diary_link=diary_link, report_link=report_link,
                            background_color=["#D1B280", "#C292FA", "#7AB996"][background_color],
@@ -67,7 +65,7 @@ def index():
 @app.route("/studentreport/<int:semester>")
 @login_required
 def report(semester):
-    if type_of_user != "student":
+    if current_user.__class__ != Student:
         return redirect('/')
     # Отчёты показываются по полугодиям
     # Учитель смотреть отчёты не может !!!!!
@@ -110,7 +108,7 @@ def report(semester):
 @app.route("/studentdiary/<int:week>")
 @login_required
 def studentdiary(week):
-    if type_of_user != 'student':
+    if current_user.__class__ != Student:
         return redirect('/')
     if week not in range(1, 41):
         return redirect(f"/studentdiary/{to_now_week()}")
@@ -154,7 +152,7 @@ def studentdiary(week):
 @app.route("/teacherdiary/<int:week>")
 @login_required
 def teacherdiary(week):
-    if type_of_user != 'teacher':
+    if current_user.__class__ != Teacher:
         return redirect('/')
     if week not in range(1, 41):
         return redirect(f"/teacherdiary/{to_now_week()}")
@@ -194,7 +192,7 @@ def teacherdiary(week):
 @app.route("/teacherdiary/<int:week>/<int:weekday>/<int:lesson_number>", methods=['GET', 'POST'])
 @login_required
 def set_marks(week, weekday, lesson_number):
-    if type_of_user != 'teacher':
+    if current_user.__class__ != Teacher:
         return redirect('/')
     # Проверяем существование класса, номера урока и недели
     if not (lesson_number in range(1, 12) and weekday in range(0, 6) and week in range(1, 41)):
@@ -471,13 +469,13 @@ def login():
         # Сначала пройдемся по учителям
         teacher = db_sess.query(Teacher).filter(Teacher.email == form.email.data).first()
         if teacher and teacher.check_password(form.password.data):
-            type_of_user = 'teacher'
+            type_of_user = 'Teacher'
             login_user(teacher, remember=form.remember_me.data)
             return redirect(f"/teacherdiary/{to_now_week()}")
         # Если учитель не найден, пройдемся по ученикам
         student = db_sess.query(Student).filter(Student.email == form.email.data).first()
         if student and student.check_password(form.password.data):
-            type_of_user = 'student'
+            type_of_user = 'Student'
             login_user(student, remember=form.remember_me.data)
             return redirect(f"/studentdiary/{to_now_week()}")
         return render_template('login.html',
@@ -491,11 +489,10 @@ def login():
 @app.route("/settings", methods=['GET', 'POST'])
 @login_required
 def settings():
-    global type_of_user
     form = SettingsForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
-        if type_of_user == "teacher":
+        if current_user.__class__ == Teacher:
             user = db_sess.query(Teacher).filter(Teacher.id == current_user.id).first()
         else:
             user = db_sess.query(Student).filter(Student.id == current_user.id).first()
@@ -504,13 +501,19 @@ def settings():
         user.background_color = ["Светлый", "Фиолетовый", "Зеленый"].index(form.themes.data)
         db_sess.commit()
         return redirect('/')
+    if current_user.__class__ == Student:
+        diary = 'studentdiary'
+    else:
+        diary = 'teacherdiary'
     return render_template('settings.html', title='Настройки',
-                           diary_link=f"/{type_of_user}diary/{to_now_week()}", report_link="/studentreport/1",
+                           diary_link=f"/{diary}/{to_now_week()}",
+                           report_link="/studentreport/1",
                            form=form, background_color=["#D1B280", "#C292FA", "#7AB996"][current_user.background_color])
 
 
 def main():
     db_session.global_init("db/netschool.db")
+    db_sess = db_session.create_session()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
 
