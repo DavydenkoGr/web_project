@@ -16,19 +16,27 @@ Open your working directory in terminal and run next commands
 
 ```
 git clone https://<YOUR_GITHUB_LOGIN>:<YOUR_TOCKEN>@github.com/DavydenkoGr/web_project
+cd web_project
+chmod +x script.sh
 ./script.sh
 ```
 
-Open next URL in your browser:  
+Open next URL in your browser:
+
 ```
 http://localhost:5000
 ```
+
+*NOTICE: if you want to change host or port, you may specify them in the script.sh*  
 
 Now start using web diary as it shown in the following examples:
 
 ### Usage example
 
-![commands](static/usage-examples/command-example.png)
+#### Terminal commands
+
+![commands](static/usage-examples/first-command-example.png)
+![commands](static/usage-examples/second-command-example.png)
 
 #### Student
 
