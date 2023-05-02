@@ -1,3 +1,9 @@
+from flask import Flask, render_template, redirect, request
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask_restful import Api
+import sqlalchemy
+from wtforms import SelectField, FieldList
+import os
 from data import db_session
 from data.marks import Marks
 from data.school_classes import SchoolClass
@@ -7,22 +13,14 @@ from data.teachers import Teacher
 from data.homework import Homework
 from forms.registration import RegisterStudentForm, RegisterTeacherForm, LoginForm, SettingsForm
 from forms.set_marks import MarksSettingForm
-from flask import Flask, render_template, redirect, request
-from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from flask_restful import Api
-import sqlalchemy
-from wtforms import SelectField, FieldList
 from xlsx_reader import get_class_schedule
 from date_and_time import to_now_week, week_list, holidays
-import os
-
 
 app = Flask(__name__)
 api = Api(app)
 app.config['SECRET_KEY'] = 'davydenkogrigory_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
-# Переменная, отвечающая за тип пользователя
 
 
 @login_manager.user_loader
