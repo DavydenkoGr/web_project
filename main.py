@@ -26,6 +26,7 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
+    """find user in database and load user"""
     db_sess = db_session.create_session()
     if db_sess.query(Teacher).get(user_id):
         return db_sess.query(Teacher).get(user_id)
@@ -36,12 +37,14 @@ def load_user(user_id):
 @app.route("/logout")
 @login_required
 def logout():
+    """logout"""
     logout_user()
     return redirect("/")
 
 
 @app.route("/")
 def index():
+    """main page with fictional advertisements"""
     if current_user.is_authenticated:
         background_color = current_user.background_color
         if current_user.__class__ == Teacher:
@@ -63,6 +66,7 @@ def index():
 @app.route("/studentreport/<int:semester>")
 @login_required
 def report(semester):
+    """report page controller, which shows student statistics"""
     if current_user.__class__ != Student:
         return redirect("/")
     # Отчёты показываются по полугодиям
@@ -106,6 +110,10 @@ def report(semester):
 @app.route("/studentdiary/<int:week>")
 @login_required
 def studentdiary(week):
+    """
+    student diary pages controller
+    displays homework, marks, schedule
+    """
     if current_user.__class__ != Student:
         return redirect("/")
     if week not in range(1, 41):
@@ -150,6 +158,10 @@ def studentdiary(week):
 @app.route("/teacherdiary/<int:week>")
 @login_required
 def teacherdiary(week):
+    """
+    teacher diary pages controller
+    displays homework, schedule, allows to set marks for a specific date
+    """
     if current_user.__class__ != Teacher:
         return redirect("/")
     if week not in range(1, 41):
@@ -190,6 +202,10 @@ def teacherdiary(week):
 @app.route("/teacherdiary/<int:week>/<int:weekday>/<int:lesson_number>", methods=["GET", "POST"])
 @login_required
 def set_marks(week, weekday, lesson_number):
+    """
+    set marks page controller
+    give teacher opportunity to set marks and add homework on specific day
+    """
     if current_user.__class__ != Teacher:
         return redirect("/")
     # Проверяем существование класса, номера урока и недели
@@ -316,6 +332,10 @@ def set_marks(week, weekday, lesson_number):
 
 @app.route("/register_student", methods=["GET", "POST"])
 def register_student():
+    """
+    student registration page controller
+    verify new student information and save it to database
+    """
     form = RegisterStudentForm()
     if form.validate_on_submit():
         if form.password.data != form.password_again.data:
@@ -362,6 +382,10 @@ def register_student():
 
 @app.route("/register_teacher", methods=["GET", "POST"])
 def register_teacher():
+    """
+    teacher registration page controller
+    verify new teacher information and save it to database
+    """
     form = RegisterTeacherForm()
     if form.validate_on_submit():
         # Проверка почта/пароль
@@ -489,6 +513,11 @@ def register_teacher():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    """
+    login page controller
+    find user in database and give special accesses
+    confirm log in
+    """
     form = LoginForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
@@ -513,6 +542,10 @@ def login():
 @app.route("/settings", methods=["GET", "POST"])
 @login_required
 def settings():
+    """
+    settings page controller
+    give user opportunity to customize site and change password
+    """
     form = SettingsForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
@@ -537,6 +570,7 @@ def settings():
 
 
 def main():
+    """start an application"""
     db_session.global_init("db/netschool.db")
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
