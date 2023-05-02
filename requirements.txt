@@ -2,12 +2,7 @@ Flask==2.0.3
 Flask-Login==0.5.0
 Flask-RESTful==0.3.9
 Flask-WTF==1.0.0
-Flask-SQLAlchemy==2.5.1
 SQLAlchemy==1.4.31
 SQLAlchemy-serializer==1.4.1
-WTForms==3.0.1
-Werkzeug==2.0.3
-XlsxWriter==1.4.0
 openpyxl==3.0.7
-MarkupSafe==2.1.0
-itsdangerous==2.1.0
+XlsxWriter==1.4.0
