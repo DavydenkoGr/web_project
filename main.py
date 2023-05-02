@@ -19,7 +19,7 @@ from date_and_time import to_now_week, week_list, holidays
 
 app = Flask(__name__)
 api = Api(app)
-app.config["SECRET_KEY"] = "davydenkogrigory_secret_key"
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -234,7 +234,7 @@ def set_marks(week, weekday, lesson_number):
     if not class_id:
         return redirect(f"/teacherdiary/{to_now_week()}")
     # Создаем поля оценок для каждого ученика из данного класса
-    # К сожалению оценки задать как не получится, в отличии от домашней работы
+    # К сожалению оценки задать как не получится, в отличие от домашней работы
     # если учитель решит изменить оценки в этот день, менять придется всем
     students = db_sess.query(Student).filter(Student.school_class_id == class_id).all()
     MarksSettingForm.marks = FieldList(SelectField("Оценка", choices=["", 5, 4, 3, 2]),
