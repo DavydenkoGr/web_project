@@ -5,11 +5,11 @@ import sqlalchemy
 from wtforms import SelectField, FieldList
 import os
 from data import db_session
-from data.marks import Marks
-from data.school_classes import SchoolClass
-from data.students import Student
-from data.subjects import Subject
-from data.teachers import Teacher
+from data.mark import Marks
+from data.school_class import SchoolClass
+from data.student import Student
+from data.subject import Subject
+from data.teacher import Teacher
 from data.homework import Homework
 from forms.registration import RegisterStudentForm, RegisterTeacherForm, LoginForm, SettingsForm
 from forms.set_marks import MarksSettingForm
