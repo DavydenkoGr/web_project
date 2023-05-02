@@ -6,11 +6,13 @@ from wtforms.validators import DataRequired
 
 
 class MultiCheckboxField(SelectMultipleField):
+    """additional class, which helps to create multi checkbox field in the registration form"""
     widget = widgets.ListWidget(prefix_label=False)
     option_widget = widgets.CheckboxInput()
 
 
 class RegisterStudentForm(FlaskForm):
+    """register student form"""
     email = EmailField('Почта', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
     password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
@@ -22,6 +24,7 @@ class RegisterStudentForm(FlaskForm):
 
 
 class RegisterTeacherForm(FlaskForm):
+    """register teacher form"""
     s = ('Математика', 'Физика', 'Химия', 'Информатика', 'Русский язык', 'Английский язык',
          'История', 'Обществознание', 'Биология', 'География', 'Литература',
          'Физкультура', 'ОБЖ', 'Технология', 'ИЗО', 'Музыка', 'Окружающий мир')
@@ -37,14 +40,8 @@ class RegisterTeacherForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
+    """login form"""
     email = EmailField('Почта', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
     remember_me = BooleanField('Запомнить меня')
     submit = SubmitField('Войти')
-
-
-class SettingsForm(FlaskForm):
-    old_password = PasswordField('Старый пароль')
-    new_password = PasswordField('Новый пароль')
-    themes = SelectField('Цвета', choices=["Светлый", "Фиолетовый", "Зеленый"])
-    submit = SubmitField('Применить')

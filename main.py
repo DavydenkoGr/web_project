@@ -11,8 +11,9 @@ from data.student import Student
 from data.subject import Subject
 from data.teacher import Teacher
 from data.homework import Homework
-from forms.registration import RegisterStudentForm, RegisterTeacherForm, LoginForm, SettingsForm
+from forms.registration import RegisterStudentForm, RegisterTeacherForm, LoginForm
 from forms.set_marks import MarksSettingForm
+from forms.settings import SettingsForm
 from xlsx_reader import get_class_schedule
 from date_and_time import to_now_week, week_list, holidays
 
