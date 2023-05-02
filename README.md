@@ -16,8 +16,7 @@ Open your working directory in terminal and run next commands
 
 ```
 git clone https://github.com/DavydenkoGr/web_project
-pip install --force-reinstall -r requirements.txt  
-python3 main.py
+./script.sh
 ```
 
 Open next URL in your browser:  
