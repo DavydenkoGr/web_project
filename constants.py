@@ -1,4 +1,13 @@
-CLASSES = ['А', 'Б', 'В', 'Г']
+CLASSES_LETTERS = ['А', 'Б', 'В', 'Г']
+CLASSES_NUMBERS = [number for number in range(1, 12)]
+CLASSES_WITH_NUMBERS = [
+    (str(number + 1) + letter, str(number + 1) + letter) for number in range(11) for letter in CLASSES_LETTERS
+]
+SUBJECTS = [
+    'Математика', 'Физика', 'Химия', 'Информатика', 'Русский язык', 'Английский язык',
+    'История', 'Обществознание', 'Биология', 'География', 'Литература',
+    'Физкультура', 'ОБЖ', 'Технология', 'ИЗО', 'Музыка', 'Окружающий мир'
+]
 # Additional constant, which may help to create base schedule
 SUBJECT_DICT = {
     1: [

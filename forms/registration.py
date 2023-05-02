@@ -3,6 +3,7 @@ from wtforms import PasswordField, StringField, SubmitField, BooleanField
 from wtforms import SelectField, widgets, SelectMultipleField
 from wtforms.fields import EmailField
 from wtforms.validators import DataRequired
+from constants import CLASSES_LETTERS, CLASSES_NUMBERS, SUBJECTS, CLASSES_WITH_NUMBERS
 
 
 class MultiCheckboxField(SelectMultipleField):
@@ -18,24 +19,20 @@ class RegisterStudentForm(FlaskForm):
     password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
     surname = StringField('Фамилия', validators=[DataRequired()])
     name = StringField('Имя', validators=[DataRequired()])
-    class_number = SelectField('Номер класса', validators=[DataRequired()], choices=[i + 1 for i in range(11)])
-    class_letter = SelectField('Буква класса', validators=[DataRequired()], choices=['А', 'Б', 'В', 'Г'])
+    class_number = SelectField('Номер класса', validators=[DataRequired()], choices=CLASSES_NUMBERS)
+    class_letter = SelectField('Буква класса', validators=[DataRequired()], choices=CLASSES_LETTERS)
     submit = SubmitField('Зарегистрироваться')
 
 
 class RegisterTeacherForm(FlaskForm):
     """register teacher form"""
-    s = ('Математика', 'Физика', 'Химия', 'Информатика', 'Русский язык', 'Английский язык',
-         'История', 'Обществознание', 'Биология', 'География', 'Литература',
-         'Физкультура', 'ОБЖ', 'Технология', 'ИЗО', 'Музыка', 'Окружающий мир')
     email = EmailField('Почта', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
     password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
     surname = StringField('Фамилия', validators=[DataRequired()])
     name = StringField('Имя', validators=[DataRequired()])
-    subject = SelectField('Предмет', validators=[DataRequired()], choices=s)
-    classes = MultiCheckboxField('Классы', choices=[(str(i + 1) + j, str(i + 1) + j)
-                                                    for i in range(11) for j in ['А', 'Б', 'В', 'Г']])
+    subject = SelectField('Предмет', validators=[DataRequired()], choices=SUBJECTS)
+    classes = MultiCheckboxField('Классы', choices=CLASSES_WITH_NUMBERS)
     submit = SubmitField('Зарегистрироваться')
 
 

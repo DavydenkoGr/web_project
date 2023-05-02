@@ -1,12 +1,12 @@
 from openpyxl import load_workbook
-from constants import CLASSES
+from constants import CLASSES_LETTERS
 
 
 def get_class_schedule(number, letter):
     """return schedule by class from school_schedule.xlsx document"""
     wb = load_workbook("static/school_schedule.xlsx")
     sheet = wb.get_sheet_by_name(f"{number} класс")
-    index = CLASSES.index(letter)
+    index = CLASSES_LETTERS.index(letter)
     table = []
     for i in range(7 * index + 1, 7 * (index + 1)):
         row = []
