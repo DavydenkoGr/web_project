@@ -29,18 +29,18 @@ Now start using web diary as it shown in the following examples:
 
 ### Usage example
 
-![commands](static/usage-examples/command-example.png)  
+![commands](static/usage-examples/command-example.png)
 
 #### Student
 
-![registration](static/usage-examples/registration-example.png)  
-![watch diary](static/usage-examples/watch-student-diary-example.png)  
-![watch report](static/usage-examples/watch-report-example.png)
+![registration](static/usage-examples/registration-student-example.png)  
+![watch diary](static/usage-examples/student-diary-example.png)  
+![watch report](static/usage-examples/report-example.png)
 
 #### Teacher
 
-![registration](static/usage-examples/registration-example.png)  
-![watch diary](static/usage-examples/watch-teacher-diary-example.png)  
+![registration](static/usage-examples/registration-teacher-example.png)  
+![watch diary](static/usage-examples/teacher-diary-example.png)  
 ![set marks](static/usage-examples/set-marks-example.png)
 
 You can check other available functions and pages
