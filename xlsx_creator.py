@@ -9,7 +9,7 @@ def create_base_schedule():
      1) students can`t have more than 6 subjects per day
      2) you can`t add subjects, which isn`t specified in the subject table
     """
-    workbook = xlsxwriter.Workbook('static/school_schedule.xlsx')
+    workbook = xlsxwriter.Workbook("static/school_schedule.xlsx")
     for t in range(1, 12):
         worksheet = workbook.add_worksheet(f"{t} класс")
         data = SUBJECT_DICT[t]
@@ -30,7 +30,7 @@ def create_base_schedule():
                     daily_schedule = daily_schedule[-2:] + daily_schedule[:-2]
                 # Таким образом, учитель сможет вести хотя бы у 2-х классов в параллели
                 worksheet.write(row, 0,
-                                ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'][k])
+                                ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"][k])
                 for j in range(len(daily_schedule)):
                     if not daily_schedule[j]:
                         break

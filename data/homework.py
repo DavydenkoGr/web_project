@@ -6,7 +6,7 @@ from .db_session import SqlAlchemyBase
 
 class Homework(SqlAlchemyBase, SerializerMixin):
     """homework model"""
-    __tablename__ = 'homeworks'
+    __tablename__ = "homeworks"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
 

@@ -14,31 +14,31 @@ class MultiCheckboxField(SelectMultipleField):
 
 class RegisterStudentForm(FlaskForm):
     """register student form"""
-    email = EmailField('Почта', validators=[DataRequired()])
-    password = PasswordField('Пароль', validators=[DataRequired()])
-    password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
-    surname = StringField('Фамилия', validators=[DataRequired()])
-    name = StringField('Имя', validators=[DataRequired()])
-    class_number = SelectField('Номер класса', validators=[DataRequired()], choices=CLASSES_NUMBERS)
-    class_letter = SelectField('Буква класса', validators=[DataRequired()], choices=CLASSES_LETTERS)
-    submit = SubmitField('Зарегистрироваться')
+    email = EmailField("Почта", validators=[DataRequired()])
+    password = PasswordField("Пароль", validators=[DataRequired()])
+    password_again = PasswordField("Повторите пароль", validators=[DataRequired()])
+    surname = StringField("Фамилия", validators=[DataRequired()])
+    name = StringField("Имя", validators=[DataRequired()])
+    class_number = SelectField("Номер класса", validators=[DataRequired()], choices=CLASSES_NUMBERS)
+    class_letter = SelectField("Буква класса", validators=[DataRequired()], choices=CLASSES_LETTERS)
+    submit = SubmitField("Зарегистрироваться")
 
 
 class RegisterTeacherForm(FlaskForm):
     """register teacher form"""
-    email = EmailField('Почта', validators=[DataRequired()])
-    password = PasswordField('Пароль', validators=[DataRequired()])
-    password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
-    surname = StringField('Фамилия', validators=[DataRequired()])
-    name = StringField('Имя', validators=[DataRequired()])
-    subject = SelectField('Предмет', validators=[DataRequired()], choices=SUBJECTS)
-    classes = MultiCheckboxField('Классы', choices=CLASSES_WITH_NUMBERS)
-    submit = SubmitField('Зарегистрироваться')
+    email = EmailField("Почта", validators=[DataRequired()])
+    password = PasswordField("Пароль", validators=[DataRequired()])
+    password_again = PasswordField("Повторите пароль", validators=[DataRequired()])
+    surname = StringField("Фамилия", validators=[DataRequired()])
+    name = StringField("Имя", validators=[DataRequired()])
+    subject = SelectField("Предмет", validators=[DataRequired()], choices=SUBJECTS)
+    classes = MultiCheckboxField("Классы", choices=CLASSES_WITH_NUMBERS)
+    submit = SubmitField("Зарегистрироваться")
 
 
 class LoginForm(FlaskForm):
     """login form"""
-    email = EmailField('Почта', validators=[DataRequired()])
-    password = PasswordField('Пароль', validators=[DataRequired()])
-    remember_me = BooleanField('Запомнить меня')
-    submit = SubmitField('Войти')
+    email = EmailField("Почта", validators=[DataRequired()])
+    password = PasswordField("Пароль", validators=[DataRequired()])
+    remember_me = BooleanField("Запомнить меня")
+    submit = SubmitField("Войти")

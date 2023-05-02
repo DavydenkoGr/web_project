@@ -8,7 +8,7 @@ from .db_session import SqlAlchemyBase
 
 class Student(SqlAlchemyBase, UserMixin, SerializerMixin):
     """student model"""
-    __tablename__ = 'students'
+    __tablename__ = "students"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     name = sqlalchemy.Column(sqlalchemy.String, nullable=False)
@@ -20,7 +20,7 @@ class Student(SqlAlchemyBase, UserMixin, SerializerMixin):
     background_color = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
 
     school_class = orm.relation("SchoolClass")
-    marks = orm.relation("Marks", back_populates='student')
+    marks = orm.relation("Marks", back_populates="student")
 
     def set_password(self, password):
         """set password"""

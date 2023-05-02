@@ -8,7 +8,7 @@ from .db_session import SqlAlchemyBase
 
 class Teacher(SqlAlchemyBase, UserMixin, SerializerMixin):
     """teacher model"""
-    __tablename__ = 'teachers'
+    __tablename__ = "teachers"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     name = sqlalchemy.Column(sqlalchemy.String, nullable=False)
