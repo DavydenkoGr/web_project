@@ -1,12 +1,13 @@
 import sqlalchemy
 from sqlalchemy import orm
-from .db_session import SqlAlchemyBase
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from sqlalchemy_serializer import SerializerMixin
+from .db_session import SqlAlchemyBase
 
 
 class Student(SqlAlchemyBase, UserMixin, SerializerMixin):
+    """student model"""
     __tablename__ = 'students'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
@@ -22,7 +23,9 @@ class Student(SqlAlchemyBase, UserMixin, SerializerMixin):
     marks = orm.relation("Marks", back_populates='student')
 
     def set_password(self, password):
+        """set password"""
         self.hashed_password = generate_password_hash(password)
 
     def check_password(self, password):
+        """check if password correct"""
         return check_password_hash(self.hashed_password, password)

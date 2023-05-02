@@ -1,8 +1,7 @@
 import sqlalchemy
 from sqlalchemy import orm
-from .db_session import SqlAlchemyBase
 from sqlalchemy_serializer import SerializerMixin
-
+from .db_session import SqlAlchemyBase
 
 association_table2 = sqlalchemy.Table(
     'class_to_subject',
@@ -15,6 +14,7 @@ association_table2 = sqlalchemy.Table(
 
 
 class Subject(SqlAlchemyBase, SerializerMixin):
+    """subjects model"""
     __tablename__ = 'subjects'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
