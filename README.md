@@ -15,7 +15,7 @@ which allows you to quickly track changes in the state of your schooling process
 Open your working directory in terminal and run next commands
 
 ```
-git clone https://github.com/DavydenkoGr/web_project
+git clone https://<YOUR_GITHUB_LOGIN>:<YOUR_TOCKEN>@github.com/DavydenkoGr/web_project
 ./script.sh
 ```
 
