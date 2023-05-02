@@ -3,3 +3,4 @@ venv
 *.iml
 test.*
 __pycache__
+site-packages
