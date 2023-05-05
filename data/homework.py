@@ -1,11 +1,12 @@
 import sqlalchemy
 from sqlalchemy import orm
-from .db_session import SqlAlchemyBase
 from sqlalchemy_serializer import SerializerMixin
+from .db_session import SqlAlchemyBase
 
 
 class Homework(SqlAlchemyBase, SerializerMixin):
-    __tablename__ = 'homeworks'
+    """homework model"""
+    __tablename__ = "homeworks"
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
 
@@ -13,7 +14,6 @@ class Homework(SqlAlchemyBase, SerializerMixin):
     class_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("school_classes.id"))
     task = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     date_info = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-
 
     subject = orm.relation("Subject")
     school_class = orm.relation("SchoolClass")

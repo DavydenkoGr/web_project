@@ -1,32 +1,32 @@
-from data import db_session
-from data.marks import Marks
-from data.school_classes import SchoolClass
-from data.students import Student
-from data.subjects import Subject
-from data.teachers import Teacher
-from data.homework import Homework
-from forms.registration import RegisterStudentForm, RegisterTeacherForm, LoginForm, SettingsForm
-from forms.set_marks import MarksSettingForm
 from flask import Flask, render_template, redirect, request
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restful import Api
 import sqlalchemy
 from wtforms import SelectField, FieldList
-from xlsx_reader import get_class_schedule
-from date_and_time import *
 import os
-
+from data import db_session
+from data.mark import Marks
+from data.school_class import SchoolClass
+from data.student import Student
+from data.subject import Subject
+from data.teacher import Teacher
+from data.homework import Homework
+from forms.registration import RegisterStudentForm, RegisterTeacherForm, LoginForm
+from forms.set_marks import MarksSettingForm
+from forms.settings import SettingsForm
+from xlsx_reader import get_class_schedule
+from date_and_time import to_now_week, week_list, holidays
 
 app = Flask(__name__)
 api = Api(app)
-app.config['SECRET_KEY'] = 'davydenkogrigory_secret_key'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 login_manager = LoginManager()
 login_manager.init_app(app)
-# Переменная, отвечающая за тип пользователя
 
 
 @login_manager.user_loader
 def load_user(user_id):
+    """find user in database and load user"""
     db_sess = db_session.create_session()
     if db_sess.query(Teacher).get(user_id):
         return db_sess.query(Teacher).get(user_id)
@@ -34,15 +34,17 @@ def load_user(user_id):
         return db_sess.query(Student).get(user_id)
 
 
-@app.route('/logout')
+@app.route("/logout")
 @login_required
 def logout():
+    """logout"""
     logout_user()
     return redirect("/")
 
 
 @app.route("/")
 def index():
+    """main page with fictional advertisements"""
     if current_user.is_authenticated:
         background_color = current_user.background_color
         if current_user.__class__ == Teacher:
@@ -55,7 +57,7 @@ def index():
         background_color = 0
         diary_link = "/"
         report_link = "/"
-    return render_template("index.html", title='Объявления', dont_add_container=True,
+    return render_template("index.html", title="Объявления", dont_add_container=True,
                            diary_link=diary_link, report_link=report_link,
                            background_color=["#D1B280", "#C292FA", "#7AB996"][background_color],
                            current_page=1)
@@ -64,8 +66,9 @@ def index():
 @app.route("/studentreport/<int:semester>")
 @login_required
 def report(semester):
+    """report page controller, which shows student statistics"""
     if current_user.__class__ != Student:
-        return redirect('/')
+        return redirect("/")
     # Отчёты показываются по полугодиям
     # Учитель смотреть отчёты не может !!!!!
     if semester not in range(1, 3):
@@ -85,20 +88,20 @@ def report(semester):
             continue
         marks_list = marks.marks.split()
         for mark in marks_list:
-            if semester == 2 and int(mark.split('/')[0]) > 19 or\
-                    semester == 1 and int(mark.split('/')[0]) < 19:
-                s[6 - int(mark.split('/')[-1])] += 1
+            if semester == 2 and int(mark.split("/")[0]) > 19 or\
+                    semester == 1 and int(mark.split("/")[0]) < 19:
+                s[6 - int(mark.split("/")[-1])] += 1
         if s[1] + s[2] + s[3] + s[4] == 0:
             table.append(s)
             continue
         # Нарисуем красивое среднее арифметическое
         s[-1] = str(round(((5 * s[1] + 4 * s[2] + 3 * s[3] + 2 * s[4]) / (s[1] + s[2] + s[3] + s[4])), 2))
-        s[-1] = ','.join(s[-1].split('.'))
+        s[-1] = ",".join(s[-1].split("."))
         if len(s[-1]) == 3:
-            s[-1] += '0'
+            s[-1] += "0"
         table.append(s)
     total = [sum(table[i][j] for i in range(len(table))) for j in range(1, 5)]
-    return render_template("report.html", title='Отчёты', dont_add_container=True, current_page=2,
+    return render_template("report.html", title="Отчёты", dont_add_container=True, current_page=2,
                            diary_link=f"/studentdiary/{to_now_week()}",
                            background_color=["#D1B280", "#C292FA", "#7AB996"][current_user.background_color],
                            table=table, total=total, semester=semester)
@@ -107,8 +110,12 @@ def report(semester):
 @app.route("/studentdiary/<int:week>")
 @login_required
 def studentdiary(week):
+    """
+    student diary pages controller
+    displays homework, marks, schedule
+    """
     if current_user.__class__ != Student:
-        return redirect('/')
+        return redirect("/")
     if week not in range(1, 41):
         return redirect(f"/studentdiary/{to_now_week()}")
     db_sess = db_session.create_session()
@@ -117,16 +124,16 @@ def studentdiary(week):
     table = get_class_schedule(school_class.number, school_class.letter)
 
     # Выберем среди оценок ученика оценки на эту неделю
-    mark_table = [['' for _ in range(6)] for _ in range(6)]
+    mark_table = [["" for _ in range(6)] for _ in range(6)]
     all_student_marks = db_sess.query(Marks).filter(Marks.student_id == current_user.id).all()
     for subject_marks in all_student_marks:
         sm = subject_marks.marks.split()
         for mark in sm:
-            mark_week, weekday, lesson_number, mark = list(map(int, mark.split('/')))
+            mark_week, weekday, lesson_number, mark = list(map(int, mark.split("/")))
             if mark_week == week:
                 mark_table[weekday][lesson_number - 1] = mark
     # Заполнение таблицы с домашними заданиями
-    homework_table = [['' for _ in range(6)] for _ in range(6)]
+    homework_table = [["" for _ in range(6)] for _ in range(6)]
     for i in range(len(table)):
         for j in range(len(table[i])):
             subject = db_sess.query(Subject).filter(Subject.name == table[i][j]
@@ -139,7 +146,7 @@ def studentdiary(week):
             if homework:
                 homework_table[i][j] = homework.task
 
-    return render_template("studentdiary.html", title='Электронный дневник', current_page=3,
+    return render_template("studentdiary.html", title="Электронный дневник", current_page=3,
                            dont_add_container=True, table=table,
                            diary_link=f"/studentdiary/{to_now_week()}", report_link="/studentreport/1",
                            background_color=["#D1B280", "#C292FA", "#7AB996"][current_user.background_color],
@@ -151,15 +158,19 @@ def studentdiary(week):
 @app.route("/teacherdiary/<int:week>")
 @login_required
 def teacherdiary(week):
+    """
+    teacher diary pages controller
+    displays homework, schedule, allows to set marks for a specific date
+    """
     if current_user.__class__ != Teacher:
-        return redirect('/')
+        return redirect("/")
     if week not in range(1, 41):
         return redirect(f"/teacherdiary/{to_now_week()}")
     db_sess = db_session.create_session()
     # Создадим все необходимые таблички для работы с дневником
     teacher_schedule = [[[None for _ in range(6)] for _ in range(6)] for _ in range(2)]
     id_table = [[[None for _ in range(6)] for _ in range(6)] for _ in range(2)]
-    homework_table = [[['' for _ in range(6)] for _ in range(6)] for _ in range(2)]
+    homework_table = [[["" for _ in range(6)] for _ in range(6)] for _ in range(2)]
     subject = db_sess.query(Subject).filter(Subject.id == current_user.subject_id
                                             ).first()
     teacher = db_sess.query(Teacher).filter(Teacher.id == current_user.id).first()
@@ -180,7 +191,7 @@ def teacherdiary(week):
                                                               ).first()
                     if homework:
                         homework_table[(school_class.number + 1) % 2][i][j] = homework.task
-    return render_template("teacherdiary.html", title='Электронный журнал', dont_add_container=True,
+    return render_template("teacherdiary.html", title="Электронный журнал", dont_add_container=True,
                            diary_link=f"/teacherdiary/{to_now_week()}",
                            background_color=["#D1B280", "#C292FA", "#7AB996"][current_user.background_color],
                            current_page=3, table=teacher_schedule, id_table=id_table,
@@ -188,11 +199,15 @@ def teacherdiary(week):
                            homework_table=homework_table)
 
 
-@app.route("/teacherdiary/<int:week>/<int:weekday>/<int:lesson_number>", methods=['GET', 'POST'])
+@app.route("/teacherdiary/<int:week>/<int:weekday>/<int:lesson_number>", methods=["GET", "POST"])
 @login_required
 def set_marks(week, weekday, lesson_number):
+    """
+    set marks page controller
+    give teacher opportunity to set marks and add homework on specific day
+    """
     if current_user.__class__ != Teacher:
-        return redirect('/')
+        return redirect("/")
     # Проверяем существование класса, номера урока и недели
     if not (lesson_number in range(1, 12) and weekday in range(0, 6) and week in range(1, 41)):
         return redirect(f"/teacherdiary/{to_now_week()}")
@@ -219,14 +234,14 @@ def set_marks(week, weekday, lesson_number):
     if not class_id:
         return redirect(f"/teacherdiary/{to_now_week()}")
     # Создаем поля оценок для каждого ученика из данного класса
-    # К сожалению оценки задать как не получится, в отличии от домашней работы
+    # К сожалению оценки задать как не получится, в отличие от домашней работы
     # если учитель решит изменить оценки в этот день, менять придется всем
     students = db_sess.query(Student).filter(Student.school_class_id == class_id).all()
-    MarksSettingForm.marks = FieldList(SelectField("Оценка", choices=['', 5, 4, 3, 2]),
+    MarksSettingForm.marks = FieldList(SelectField("Оценка", choices=["", 5, 4, 3, 2]),
                                        min_entries=len(students))
     form = MarksSettingForm()
     # Если имеется домашняя работа на этот день, выведем её
-    if request.method != 'POST':
+    if request.method != "POST":
         homework = db_sess.query(Homework).filter(Homework.subject_id == subject.id,
                                                   Homework.class_id == class_id,
                                                   Homework.date_info ==
@@ -234,7 +249,7 @@ def set_marks(week, weekday, lesson_number):
                                                   ).first()
         if homework:
             form.homework.data = homework.task
-    if request.method == 'POST':
+    if request.method == "POST":
         # Сохранение оценок
         # Оценки ученика представляют собой строку вида
         # "номер недели/день недели/номер урока/оценка номер недели/день недели/номер урока/оценка..."
@@ -252,7 +267,7 @@ def set_marks(week, weekday, lesson_number):
                     for m in sm:
                         if f"{week}/{weekday}/{lesson_number}" in m:
                             sm.remove(m)
-                            sm = ' '.join(sm)
+                            sm = " ".join(sm)
                             student_marks.marks = sm
                             break
                 continue
@@ -278,7 +293,7 @@ def set_marks(week, weekday, lesson_number):
                 for m in sm:
                     if f"{week}/{weekday}/{lesson_number}" in m:
                         sm.remove(m)
-                        sm = ' '.join(sm)
+                        sm = " ".join(sm)
                         student_marks.marks = sm
                         break
             # Заносим оценку в конец
@@ -309,25 +324,29 @@ def set_marks(week, weekday, lesson_number):
                 homework.task = form.homework.data
         db_sess.commit()
         return redirect(f"/teacherdiary/{week}")
-    return render_template("set_marks.html", title='Выставление оценок', current_page=3,
+    return render_template("set_marks.html", title="Выставление оценок", current_page=3,
                            diary_link=f"/teacherdiary/{to_now_week()}",
                            background_color=["#D1B280", "#C292FA", "#7AB996"][current_user.background_color],
                            form=form, students=students, week=week)
 
 
-@app.route('/register_student', methods=['GET', 'POST'])
+@app.route("/register_student", methods=["GET", "POST"])
 def register_student():
+    """
+    student registration page controller
+    verify new student information and save it to database
+    """
     form = RegisterStudentForm()
     if form.validate_on_submit():
         if form.password.data != form.password_again.data:
-            return render_template('register_student.html', title='Регистрация ученика',
+            return render_template("register_student.html", title="Регистрация ученика",
                                    form=form,
                                    background_color=["#D1B280", "#C292FA", "#7AB996"][0],
                                    message="Пароли не совпадают")
         db_sess = db_session.create_session()
         if db_sess.query(Student).filter(Student.email == form.email.data).first() or\
                 db_sess.query(Teacher).filter(Teacher.email == form.email.data).first():
-            return render_template('register_student.html', title='Регистрация ученика',
+            return render_template("register_student.html", title="Регистрация ученика",
                                    form=form,
                                    background_color=["#D1B280", "#C292FA", "#7AB996"][0],
                                    message="Данная почта уже зарегистрирована в системе")
@@ -356,25 +375,29 @@ def register_student():
         student.set_password(form.password.data)
         db_sess.add(student)
         db_sess.commit()
-        return redirect('/login')
-    return render_template('register_student.html', title='Регистрация ученика',
+        return redirect("/login")
+    return render_template("register_student.html", title="Регистрация ученика",
                            form=form, background_color=["#D1B280", "#C292FA", "#7AB996"][0])
 
 
-@app.route('/register_teacher', methods=['GET', 'POST'])
+@app.route("/register_teacher", methods=["GET", "POST"])
 def register_teacher():
+    """
+    teacher registration page controller
+    verify new teacher information and save it to database
+    """
     form = RegisterTeacherForm()
     if form.validate_on_submit():
         # Проверка почта/пароль
         if form.password.data != form.password_again.data:
-            return render_template('register_teacher.html', title='Регистрация учителя',
+            return render_template("register_teacher.html", title="Регистрация учителя",
                                    form=form,
                                    background_color=["#D1B280", "#C292FA", "#7AB996"][0],
                                    message="Пароли не совпадают")
         db_sess = db_session.create_session()
         if db_sess.query(Student).filter(Student.email == form.email.data).first() or \
                 db_sess.query(Teacher).filter(Teacher.email == form.email.data).first():
-            return render_template('register_teacher.html', title='Регистрация учителя',
+            return render_template("register_teacher.html", title="Регистрация учителя",
                                    form=form,
                                    background_color=["#D1B280", "#C292FA", "#7AB996"][0],
                                    message="Данная почта уже зарегистрирована в системе")
@@ -384,28 +407,28 @@ def register_teacher():
         # Проверяем есть ли у данного класса данный урок.
         # Заодно проверяем, нет ли уже у какого-то из выбранных классов учителя по заданному предмету.
         if not form.classes.data:
-            return render_template('register_teacher.html', title='Регистрация учителя',
+            return render_template("register_teacher.html", title="Регистрация учителя",
                                    form=form,
                                    background_color=["#D1B280", "#C292FA", "#7AB996"][0],
-                                   message=f'Выберите хотя бы один класс')
+                                   message=f"Выберите хотя бы один класс")
         for number_letter in form.classes.data:
             letter = number_letter[-1]
             number = int(number_letter[:-1])
             school_class = db_sess.query(SchoolClass).filter(SchoolClass.letter == letter,
                                                              SchoolClass.number == number).first()
             if subject not in school_class.subjects:
-                return render_template('register_teacher.html', title='Регистрация учителя',
+                return render_template("register_teacher.html", title="Регистрация учителя",
                                        form=form,
                                        background_color=["#D1B280", "#C292FA", "#7AB996"][0],
-                                       message=f'У {number} класса отсутствует предмет'
-                                               f' {form.subject.data}')
+                                       message=f"У {number} класса отсутствует предмет"
+                                               f" {form.subject.data}")
             for teacher in db_sess.query(Teacher).all():
                 if school_class in teacher.school_classes and teacher.subject_id == subject.id:
-                    return render_template('register_teacher.html', title='Регистрация учителя',
+                    return render_template("register_teacher.html", title="Регистрация учителя",
                                            form=form,
                                            background_color=["#D1B280", "#C292FA", "#7AB996"][0],
-                                           message=f'У {number}{letter} класса уже есть учитель'
-                                                   f' по предмету {subject.name}')
+                                           message=f"У {number}{letter} класса уже есть учитель"
+                                                   f" по предмету {subject.name}")
         # Некрасивое решение проблемы с пользовательским id
         max_student_id = db_sess.query(sqlalchemy.func.max(Student.id)).first()[0]
         max_teacher_id = db_sess.query(sqlalchemy.func.max(Teacher.id)).first()[0]
@@ -450,14 +473,14 @@ def register_teacher():
                     for lesson in range(min(len(first_table[day]), len(second_table[day]))):
                         if first_table[day][lesson] == second_table[day][lesson] and\
                                 first_table[day][lesson] == subject.name:
-                            return render_template('register_teacher.html',
-                                                   title='Регистрация учителя',
+                            return render_template("register_teacher.html",
+                                                   title="Регистрация учителя",
                                                    form=form,
                                                    background_color=["#D1B280", "#C292FA", "#7AB996"][0],
-                                                   message=f'У классов {names1[i]} и {names1[j]}'
-                                                           f' совпадают расписания,'
-                                                           f' уберите один из классов или'
-                                                           f' измените расписание.')
+                                                   message=f"У классов {names1[i]} и {names1[j]}"
+                                                           f" совпадают расписания,"
+                                                           f" уберите один из классов или"
+                                                           f" измените расписание.")
         for i, first_table in enumerate(list_of_tables2):
             for j, second_table in enumerate(list_of_tables2):
                 if i == j:
@@ -466,14 +489,14 @@ def register_teacher():
                     for lesson in range(min(len(first_table[day]), len(second_table[day]))):
                         if first_table[day][lesson] == second_table[day][lesson] and\
                                 first_table[day][lesson] == subject.name:
-                            return render_template('register_teacher.html',
-                                                   title='Регистрация учителя',
+                            return render_template("register_teacher.html",
+                                                   title="Регистрация учителя",
                                                    form=form,
                                                    background_color=["#D1B280", "#C292FA", "#7AB996"][0],
-                                                   message=f'У классов {names2[i]} и {names2[j]}'
-                                                           f' совпадают расписания,'
-                                                           f' уберите один из классов или'
-                                                           f' измените расписание.')
+                                                   message=f"У классов {names2[i]} и {names2[j]}"
+                                                           f" совпадают расписания,"
+                                                           f" уберите один из классов или"
+                                                           f" измените расписание.")
         # Если все проверки пройдены, добавляем учителю каждый выбранный класс
         db_sess.add(teacher)
         for number_letter in form.classes.data:
@@ -483,13 +506,18 @@ def register_teacher():
                                                              SchoolClass.number == number).first()
             teacher.school_classes.append(school_class)
         db_sess.commit()
-        return redirect('/login')
-    return render_template('register_teacher.html', title='Регистрация учителя', form=form,
+        return redirect("/login")
+    return render_template("register_teacher.html", title="Регистрация учителя", form=form,
                            background_color=["#D1B280", "#C292FA", "#7AB996"][0])
 
 
-@app.route("/login", methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    """
+    login page controller
+    find user in database and give special accesses
+    confirm log in
+    """
     form = LoginForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
@@ -503,17 +531,21 @@ def login():
         if student and student.check_password(form.password.data):
             login_user(student, remember=form.remember_me.data)
             return redirect(f"/studentdiary/{to_now_week()}")
-        return render_template('login.html',
+        return render_template("login.html",
                                message="Неправильно указана почта или пароль",
                                form=form,
                                background_color=["#D1B280", "#C292FA", "#7AB996"][0])
-    return render_template('login.html', title='Вход', form=form,
+    return render_template("login.html", title="Вход", form=form,
                            background_color=["#D1B280", "#C292FA", "#7AB996"][0])
 
 
-@app.route("/settings", methods=['GET', 'POST'])
+@app.route("/settings", methods=["GET", "POST"])
 @login_required
 def settings():
+    """
+    settings page controller
+    give user opportunity to customize site and change password
+    """
     form = SettingsForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
@@ -525,12 +557,12 @@ def settings():
             user.set_password(form.new_password.data)
         user.background_color = ["Светлый", "Фиолетовый", "Зеленый"].index(form.themes.data)
         db_sess.commit()
-        return redirect('/')
+        return redirect("/")
     if current_user.__class__ == Student:
-        diary = 'studentdiary'
+        diary = "studentdiary"
     else:
-        diary = 'teacherdiary'
-    return render_template('settings.html', title='Настройки',
+        diary = "teacherdiary"
+    return render_template("settings.html", title="Настройки",
                            diary_link=f"/{diary}/{to_now_week()}",
                            report_link="/studentreport/1",
                            form=form, current_page=4,
@@ -538,10 +570,11 @@ def settings():
 
 
 def main():
+    """start an application"""
     db_session.global_init("db/netschool.db")
     port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host="0.0.0.0", port=port)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
